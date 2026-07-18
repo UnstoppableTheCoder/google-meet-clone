@@ -21,5 +21,13 @@ export const useMeetingMedia = create<State & Actions>()(
         false,
         "/meeting-media/remoteStreamVersion",
       ),
+
+    resetMeetingMedia: () => {
+      set({
+        screenShare: false,
+        isRecording: false,
+        remoteStreamVersion: 0,
+      });
+    },
   })),
 );

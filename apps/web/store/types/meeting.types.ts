@@ -2,13 +2,15 @@ import { ActivePanel } from "@/types/meeting.types";
 import { Participant } from "@repo/types";
 
 export interface State {
-  currentParticipant: Participant;
+  currentParticipant: Participant | null;
   otherParticipants: Participant[];
+  leftParticipants: Participant[];
   newlyJoinedParticipant: Participant | null;
   joiningParticipants: Participant[];
   leftParticipant: Participant | null;
   openModal: boolean;
   activePanel: ActivePanel;
+  isEnded: boolean;
 }
 
 export interface Actions {
@@ -27,6 +29,13 @@ export interface Actions {
   setActivePanel: (activePanel: ActivePanel) => void;
   setOtherParticipantCamera: (cameraOn: boolean, participantId: string) => void;
   setOtherParticipantMic: (micOn: boolean, participantId: string) => void;
+  setOtherParticipantHandRaise: (
+    handRaise: boolean,
+    handRaiserId: string,
+  ) => void;
   setCurrentParticipantCamera: (cameraOn: boolean) => void;
   setCurrentParticipantMic: (micOn: boolean) => void;
+  setCurrentParticipantHandRaise: (handRaise: boolean) => void;
+  setIsEnded: (isEnded: boolean) => void;
+  resetMeeting: () => void;
 }

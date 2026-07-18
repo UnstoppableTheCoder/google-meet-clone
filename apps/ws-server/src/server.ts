@@ -7,11 +7,10 @@ import {
 } from "./handlers/process.handler";
 // import url from "url";
 import { URLSearchParams } from "url";
-import { auth, type Session } from "@repo/auth";
+import { auth } from "@repo/auth";
 
 const PORT = Number(process.env.PORT) || 8080;
-const wss = new WebSocketServer({ port: PORT });
-let session: any;
+const wss = new WebSocketServer({ port: PORT, host: "0.0.0.0" });
 
 wss.on("listening", () => {
   console.log(`WebSocket connection is listening on port: ${PORT}`);
@@ -22,36 +21,32 @@ wss.on("connection", async (ws: WebSocket, req) => {
 
   // const params = url.parse(req.url || "", true).query;
   const params = new URLSearchParams(req.url?.split("?")[1]);
-  const connectionId = params.get("id") || "";
+  const connectionId = params.get("userId") || "";
   const meetingId = params.get("meetingId") || "";
   const token = params.get("token");
 
-  const headers = new Headers();
-  headers.set("Authorization", `Bearer ${token}`);
+  if (!token) {
+    console.log("Token missing");
+    ws.close();
+    return;
+  }
 
   if (!connectionId) {
     console.log("connectionId is required");
     return;
   }
 
-  if (!connections[connectionId]) {
-    connections[connectionId] = ws;
-  }
+  connections[connectionId] = ws;
 
   ws.on("error", () => {
     return console.error;
   });
 
   ws.on("message", async (message) => {
-    if (!session) {
-      session = await auth.api.getSession({ headers });
-    }
-
-    if (!session) {
-      console.log("Session doesn't exist");
-      ws.close();
-      return;
-    }
+    // if (!(ws as any).session) {
+    //   console.log("Session doesn't exist");
+    //   return;
+    // }
 
     const parsedMessage = JSON.parse(message.toString());
 
@@ -82,9 +77,11 @@ wss.on("connection", async (ws: WebSocket, req) => {
 
     // Get the left Participant
     const leftParticipant = meeting?.participants[leftParticipantIndex];
+    // Event when user decides not to join the meeting after sending a request
     if (!leftParticipant) {
       const hostId = meeting.host ? meeting.host.id : "";
       const ws = connections[hostId];
+
       const message = {
         label: labels.NORMAL_PROCESS,
         data: {
@@ -97,37 +94,12 @@ wss.on("connection", async (ws: WebSocket, req) => {
       return;
     }
 
-    // Remove the left participants from participants array
-    meeting?.participants.splice(leftParticipantIndex, 1);
-
-    // End the meeting
-    if (meeting.participants.length === 0) {
-      delete meetings[meetingId];
-    }
-
-    // handle host left
-    if (leftParticipant?.isHost) {
-      const newHost = meeting.participants[0];
-      if (!newHost) return;
-
-      newHost.isHost = true;
-      meeting.host = newHost;
-
-      // Inform the new host about himself
-      const ws = connections[newHost.id];
-
-      const message = {
-        label: labels.NORMAL_PROCESS,
-        data: {
-          type: types.CONNECT_HOST,
-          payload: { host: newHost },
-        },
-      };
-      ws?.send(JSON.stringify(message));
-    }
-
     // Inform others about the leftParticipant
-    meeting.participants.forEach((participant) => {
+    for (const participant of meeting.participants) {
+      if (participant.id === leftParticipant.id) {
+        continue;
+      }
+
       const ws = connections[participant.id];
 
       const message = {
@@ -139,6 +111,20 @@ wss.on("connection", async (ws: WebSocket, req) => {
       };
 
       ws?.send(JSON.stringify(message));
-    });
+    }
   });
+
+  (async () => {
+    const headers = new Headers();
+    headers.set("Authorization", `Bearer ${token}`);
+
+    const session = await auth.api.getSession({ headers });
+
+    if (!session) {
+      console.log("Session doesn't exist");
+      ws.close();
+      return;
+    }
+    (ws as any).session = session;
+  })();
 });

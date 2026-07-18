@@ -10,7 +10,9 @@ export const {
   updateUser,
   changePassword,
   deleteUser,
+  requestPasswordReset,
+  resetPassword,
 } = createAuthClient({
-  baseURL: "http://localhost:3000",
+  baseURL: process.env.WEB_BASE_URL,
   plugins: [inferAdditionalFields<typeof auth>()],
 });

@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   const file = formData.get("file") as File;
   if (!file) return;
 
-  const fileName = `${Date.now()}.${file.type.split("/")[1]}`;
+  const fileName = `${Date.now()}-${file.name}`;
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_BUCKET,
     Key: "uploads/" + fileName,

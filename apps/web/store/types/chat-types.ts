@@ -1,9 +1,11 @@
-import { Chat } from "@repo/types";
+import { ChatPayload } from "@repo/types";
 
 export interface State {
-  chats: Chat[];
+  chats: ChatPayload[];
 }
 
 export interface Actions {
-  setChat: (chat: Chat) => void;
+  setChat: (chat: ChatPayload) => void;
+  setChats: (chats: ChatPayload[]) => void;
+  resetChat: () => void;
 }

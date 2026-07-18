@@ -6,13 +6,15 @@ import { devtools } from "zustand/middleware";
 
 export const useMeeting = create<State & Actions>()(
   devtools((set) => ({
-    currentParticipant: {},
+    currentParticipant: null,
     otherParticipants: [],
+    leftParticipants: [],
     newlyJoinedParticipant: null,
     joiningParticipants: [],
     leftParticipant: null,
     openModal: false,
     activePanel: "none",
+    isEnded: false,
 
     setCurrentParticipant: (currentParticipant: Participant) =>
       set({ currentParticipant }),
@@ -32,14 +34,22 @@ export const useMeeting = create<State & Actions>()(
       })),
 
     removeLeftParticipant: (leftParticipantId: string) =>
-      set((state) => ({
-        otherParticipants: state.otherParticipants.filter(
-          (participant) => participant.id !== leftParticipantId,
-        ),
-      })),
+      set((state) => {
+        return {
+          otherParticipants: state.otherParticipants.filter(
+            (participant) => participant.id !== leftParticipantId,
+          ),
+        };
+      }),
 
-    setLeftParticipant: (leftParticipant: Participant) =>
-      set({ leftParticipant }),
+    setLeftParticipant: (leftParticipant: Participant) => {
+      if (!leftParticipant) return;
+
+      set({ leftParticipant });
+      set((state) => ({
+        leftParticipants: [...state.leftParticipants, leftParticipant],
+      }));
+    },
 
     setNewlyJoinedParticipant: (newlyJoinedParticipant: Participant) =>
       set({ newlyJoinedParticipant }),
@@ -81,6 +91,20 @@ export const useMeeting = create<State & Actions>()(
         ),
       })),
 
+    setOtherParticipantHandRaise: (handRaise: boolean, handRaiserId: string) =>
+      set((state) => {
+        const otherParticipants = state.otherParticipants;
+
+        const participant = otherParticipants.find(
+          (p) => p.id === handRaiserId,
+        );
+        if (!participant) return { otherParticipants };
+
+        participant.handRaise = handRaise;
+
+        return { otherParticipants: [...otherParticipants] };
+      }),
+
     setCurrentParticipantCamera: (cameraOn: boolean) =>
       set((state) => {
         const currentParticipant = state.currentParticipant;
@@ -98,5 +122,30 @@ export const useMeeting = create<State & Actions>()(
           currentParticipant: { ...currentParticipant!, micOn },
         };
       }),
+
+    setCurrentParticipantHandRaise: (handRaise: boolean) =>
+      set((state) => {
+        const currentParticipant = state.currentParticipant;
+
+        return {
+          currentParticipant: { ...currentParticipant!, handRaise },
+        };
+      }),
+
+    setIsEnded: (isEnded: boolean) => set({ isEnded }),
+
+    resetMeeting: () => {
+      set({
+        currentParticipant: null,
+        otherParticipants: [],
+        leftParticipants: [],
+        newlyJoinedParticipant: null,
+        joiningParticipants: [],
+        leftParticipant: null,
+        openModal: false,
+        activePanel: "none",
+        isEnded: false,
+      });
+    },
   })),
 );

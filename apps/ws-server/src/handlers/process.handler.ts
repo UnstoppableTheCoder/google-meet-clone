@@ -1,7 +1,10 @@
 import { types } from "@repo/constants";
 import {
   handleAskToConnect,
+  handleEndMeeting,
   handleGrantJoiningPermission,
+  handleHandRaise,
+  handleLeaveMeeting,
   handleSendMessage,
 } from "../helpers/normal_process.helper";
 import { handleSDP_Process } from "../helpers/webrtc_process.helper";
@@ -18,6 +21,18 @@ export function handleNormalProcess(data: any) {
 
     case types.SEND_MESSAGE:
       handleSendMessage(data.payload);
+      break;
+
+    case types.HAND_RAISE:
+      handleHandRaise(data.payload);
+      break;
+
+    case types.LEAVE_MEETING:
+      handleLeaveMeeting(data.payload);
+      break;
+
+    case types.END_MEETING:
+      handleEndMeeting(data.payload);
       break;
 
     default:

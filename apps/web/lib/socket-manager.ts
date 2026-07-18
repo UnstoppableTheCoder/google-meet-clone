@@ -1,13 +1,14 @@
 let ws: WebSocket;
 
 export const setWsConnection = (
-  id: string,
+  userId: string,
   meetingId: string,
   token: string,
 ) => {
   ws = new WebSocket(
-    `ws://localhost:8080?id=${id}&meetingId=${meetingId}&token=${token}`,
+    `${process.env.NEXT_PUBLIC_WS_BASE_URL}?userId=${userId}&meetingId=${meetingId}&token=${token}`,
   );
+
   if (!ws) return;
   return ws;
 };

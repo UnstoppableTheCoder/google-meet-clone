@@ -1,19 +1,34 @@
+import { getWSConnection } from "@/lib/socket-manager";
+import { useChat } from "@/store/chat";
+import { useMeeting } from "@/store/meeting";
+import { capitalizeName } from "@/utils/capitalize";
+import { labels, types } from "@repo/constants";
+import { File } from "@repo/types";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Loader, Paperclip, Send } from "lucide-react";
-import React, { ChangeEvent, KeyboardEvent, useState } from "react";
-import { PreviewCarousel } from "./preview-carousel";
-import { File } from "@repo/types";
-import { labels, types } from "@repo/constants";
-import { useMeeting } from "@/store/meeting";
-import { getWSConnection } from "@/lib/socket-manager";
-import { useChat } from "@/store/chat";
+import React, {
+  ChangeEvent,
+  Dispatch,
+  KeyboardEvent,
+  SetStateAction,
+  useState,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
+import { saveChatToDB } from "./action";
 
-export default function ChatInput() {
-  const [files, setFiles] = useState<File[]>([]);
+export default function ChatInputContainer({
+  files,
+  setFiles,
+}: {
+  files: File[];
+  setFiles: Dispatch<SetStateAction<File[]>>;
+}) {
   const [chatMessage, setChatMessage] = useState("");
+  const [sendTo, setSendTo] = useState("everyone");
+
   const currentParticipant = useMeeting((state) => state.currentParticipant);
+  const otherParticipants = useMeeting((state) => state.otherParticipants);
   const setChat = useChat((state) => state.setChat);
   const [uploading, setUploading] = useState(false);
 
@@ -28,16 +43,14 @@ export default function ChatInput() {
       formData.append("file", file);
 
       try {
-        const response = await fetch(
-          "http://localhost:3000/api/generate-upload-url",
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
+        const response = await fetch("/api/generate-upload-url", {
+          method: "POST",
+          body: formData,
+        });
 
         const { uploadUrl, fileName, fileType } = await response.json();
-        console.log("Upload url: ", uploadUrl);
+
+        console.log("Upload URL: ", uploadUrl);
 
         // Uploading to the s3
         fetch(uploadUrl, {
@@ -50,8 +63,6 @@ export default function ChatInput() {
           ...prevFiles,
           { fileName, fileType, fileUrl },
         ]);
-
-        console.log("file type: ", fileType);
 
         setTimeout(() => {
           setUploading(false);
@@ -69,16 +80,19 @@ export default function ChatInput() {
   };
 
   const handleSend = async () => {
+    if (!currentParticipant) return;
     if (uploading) return;
     if (!chatMessage && files.length === 0) return;
 
     const chatPayload = {
-      id: uuidv4(),
+      _id: uuidv4(),
       senderId: currentParticipant.id,
+      sendTo,
       meetingId: currentParticipant.meetingId,
       chatMessage,
       files,
     };
+
     setChat(chatPayload);
 
     const message = {
@@ -92,8 +106,12 @@ export default function ChatInput() {
     const ws = getWSConnection();
     ws.send(JSON.stringify(message));
 
+    const res = await saveChatToDB(chatPayload);
+    console.log(res.message);
+
     setChatMessage("");
     setFiles([]);
+    setSendTo("everyone");
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -102,14 +120,27 @@ export default function ChatInput() {
     }
   };
 
+  const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSendTo(e.target.value);
+  };
+
   return (
-    <>
-      <div
-        id="preview-container"
-        className="h-30 w-full absolute top-150 px-15"
+    <div className="w-full flex flex-col">
+      {/* Send To */}
+      <select
+        defaultValue={sendTo}
+        value={sendTo}
+        className="select w-[90%] mx-auto"
+        onChange={handleSelectChange}
       >
-        <PreviewCarousel files={files} />
-      </div>
+        <option disabled={true}>Send to</option>
+        <option value={"everyone"}>Everyone</option>
+        {otherParticipants.map((p) => (
+          <option key={p.id} value={p.id}>
+            {capitalizeName(p.username)}
+          </option>
+        ))}
+      </select>
 
       <div className="p-3 w-full border-base-300 flex items-center gap-2">
         {/* File Upload */}
@@ -143,6 +174,6 @@ export default function ChatInput() {
           {uploading ? <Loader className="animate-spin" /> : <Send size={16} />}
         </Button>
       </div>
-    </>
+    </div>
   );
 }

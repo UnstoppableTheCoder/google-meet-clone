@@ -11,15 +11,14 @@ import { cn } from "@repo/ui/lib/utils";
 import { Crown } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef } from "react";
-import RemoteVideoContainer from "./remote-video-container";
-import LocalVideoContainer from "./local-video-container";
+import RemoteVideoContainer from "./containers/remote-video-container";
+import LocalVideoContainer from "./containers/local-video-container";
 import { Participant } from "@repo/types";
 
 export default function VideoGrid() {
   const otherParticipants = useMeeting((state) => state.otherParticipants);
-  const currentParticipant: Participant = useMeeting(
-    (state) => state.currentParticipant,
-  );
+  const currentParticipant = useMeeting((state) => state.currentParticipant);
+
   const remoteStreamVersion = useMeetingMedia(
     (state) => state.remoteStreamVersion,
   );
@@ -27,9 +26,11 @@ export default function VideoGrid() {
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   let localStream = getLocalStream();
   const screenShare = useMeetingMedia((state) => state.screenShare);
-  const { micOn, cameraOn } = currentParticipant;
+  const { micOn, cameraOn } = currentParticipant
+    ? currentParticipant
+    : { micOn: false, cameraOn: false };
 
-  // Initialize
+  // Initialize Local Stream
   useEffect(() => {
     async function initLocalStream() {
       await createLocalStream();
@@ -37,12 +38,15 @@ export default function VideoGrid() {
     initLocalStream();
   }, []);
 
+  // localStream assignment
   useEffect(() => {
     if (localStream && localVideoRef.current) {
+      localVideoRef.current.muted = true;
       localVideoRef.current.srcObject = localStream;
     }
   }, [micOn, cameraOn]);
 
+  // ScreenShare Stream assignment
   useEffect(() => {
     if (!localVideoRef.current) return;
 
@@ -55,6 +59,7 @@ export default function VideoGrid() {
     }
   }, [screenShare]);
 
+  // Remote Streams assignments
   useEffect(() => {
     otherParticipants.forEach((participant: Participant) => {
       const element = remoteVideoRefs.current[participant.id];
@@ -75,6 +80,7 @@ export default function VideoGrid() {
     });
   }, [otherParticipants, remoteStreamVersion]);
 
+  // Set Remote Video Refs
   const handleSetRemoteVideoRefs = (
     element: HTMLVideoElement,
     participantId: string,
@@ -85,7 +91,7 @@ export default function VideoGrid() {
   return (
     <div
       className={cn(
-        "flex-1 p-6 gap-4 flex flex-wrap items-center justify-center overflow-auto",
+        "flex flex-1 flex-wrap items-center justify-center gap-6 overflow-auto p-6",
       )}
     >
       <LocalVideoContainer localVideoRef={localVideoRef} />
@@ -93,8 +99,8 @@ export default function VideoGrid() {
       {otherParticipants.map((participant, index) => (
         <RemoteVideoContainer
           key={index}
-          handleSetRemoteVideoRefs={handleSetRemoteVideoRefs}
           participant={participant}
+          handleSetRemoteVideoRefs={handleSetRemoteVideoRefs}
         />
       ))}
     </div>

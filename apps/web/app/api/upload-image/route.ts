@@ -7,8 +7,6 @@ const Bucket = process.env.AWS_BUCKET;
 
 // endpoint to upload a file to the bucket
 export async function POST(request: NextRequest) {
-  const baseUrl = "https://uploads.codingthecode.site";
-
   const formData = await request.formData();
   const file = formData.get("file") as File;
 
@@ -26,5 +24,7 @@ export async function POST(request: NextRequest) {
     }),
   );
 
-  return NextResponse.json({ url: `${baseUrl}/${fileName}` });
+  return NextResponse.json({
+    url: `${process.env.UPLOADS_BASE_URL}/${fileName}`,
+  });
 }

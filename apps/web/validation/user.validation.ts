@@ -52,3 +52,24 @@ export const changePasswordSchema = z
       });
     }
   });
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .email("Email is required")
+    .max(50, "Email must be less than 30 characters"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z.string("Current password is required").min(6).max(100),
+    confirmPassword: z.string("Current password is required").min(6).max(100),
+  })
+  .superRefine(({ newPassword, confirmPassword }, ctx) => {
+    if (newPassword !== confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
+  });

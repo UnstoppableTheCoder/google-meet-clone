@@ -1,31 +1,63 @@
 import { deleteUser } from "@/lib/auth-client";
-import { CardContent, CardHeader, CardTitle } from "@repo/ui/components/card";
+import { Button } from "@repo/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { toast } from "sonner";
 
 export default function DeleteAccount() {
   const router = useRouter();
 
   const handleDeleteAccount = async () => {
-    await deleteUser();
-    router.push("/");
+    const { data, error } = await deleteUser({
+      callbackURL: "/goodbye",
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("An email has been sent to confirm the deletion");
+    }
   };
 
   return (
-    <div className="border border-error bg-base-300 p-3 rounded-lg">
-      <CardHeader>
-        <CardTitle className="text-error">Danger Zone</CardTitle>
+    <Card className="rounded-2xl border-destructive/30 bg-destructive/5 shadow-xl">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-xl font-semibold tracking-tight text-destructive">
+          Danger Zone
+        </CardTitle>
+
+        <p className="text-sm leading-6 text-muted-foreground">
+          Permanently delete your account and all associated data. This action
+          cannot be undone.
+        </p>
       </CardHeader>
 
-      <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <p className="text-sm text-base-content/70">
-          Delete your account permanently.
-        </p>
+      <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-sm font-medium text-foreground">
+            Delete your account
+          </p>
 
-        <button className="btn btn-error" onClick={handleDeleteAccount}>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Once deleted, your meetings, profile, and settings cannot be
+            recovered.
+          </p>
+        </div>
+
+        <Button
+          variant="destructive"
+          onClick={handleDeleteAccount}
+          className="h-11 rounded-xl px-6 font-semibold"
+        >
           Delete Account
-        </button>
+        </Button>
       </CardContent>
-    </div>
+    </Card>
   );
 }

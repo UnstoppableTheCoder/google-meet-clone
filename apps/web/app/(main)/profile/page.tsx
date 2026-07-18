@@ -10,8 +10,17 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
 
   return (
-    <div className="min-h-screen bg-base-200 text-base-content flex justify-center p-6">
-      <div className="w-full max-w-4xl space-y-6">
+    <div className="min-h-screen bg-background px-4 py-8">
+      <div className="mx-auto w-full max-w-5xl space-y-6 pt-16">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Profile Settings
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Manage your account information, security, and preferences.
+          </p>
+        </div>
+
         <ProfileHeader setIsEditing={setIsEditing} />
         <MeetingStatus />
         <ProfileForm isEditing={isEditing} setIsEditing={setIsEditing} />

@@ -8,7 +8,7 @@ export default function ChatFile({
   fileName: string;
   fileType: FileType;
 }) {
-  const url = `http://uploads.codingthecode.site/${fileName}`;
+  const url = `${process.env.NEXT_PUBLIC_UPLOADS_BASE_URL}/${fileName}`;
 
   switch (fileType) {
     case "application/pdf":

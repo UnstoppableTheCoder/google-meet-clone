@@ -6,9 +6,8 @@ import {
 } from "../handlers/process.handler";
 
 export const signaling = (ws: WebSocket) => {
-  const currentParticipant = useMeeting.getState().currentParticipant;
-
   ws.onopen = () => {
+    const currentParticipant = useMeeting.getState().currentParticipant;
     console.log("WS connection established successfully");
     const message = {
       label: labels.NORMAL_PROCESS,
@@ -19,6 +18,7 @@ export const signaling = (ws: WebSocket) => {
     };
 
     ws.send(JSON.stringify(message));
+    console.log("Sent ask_to_connect");
   };
 
   ws.onmessage = (event) => {
@@ -44,7 +44,9 @@ export const signaling = (ws: WebSocket) => {
     console.log("Error connecting to websocket");
   };
 
-  ws.onclose = () => {
+  ws.onclose = async () => {
     console.log("Web socket connection closed");
+    const currentParticipant = useMeeting.getState().currentParticipant;
+    if (!currentParticipant) return;
   };
 };

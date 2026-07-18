@@ -1,15 +1,26 @@
-import { File, Participant } from "@repo/types";
+import { ChatPayload, HandRaisePayload, Participant } from "@repo/types";
 import { useMeeting } from "../store/meeting";
 import { getWSConnection } from "@/lib/socket-manager";
 import { redirect } from "next/navigation";
 import { createPeerConnection } from "@/lib/peer-manager";
 import { useChat } from "@/store/chat";
+import {
+  deleteMeetingHistory,
+  saveEndMeetingHistory,
+} from "@/actions/meeting.action";
+import { useMeetingMedia } from "@/store/meeting-media";
 
 export function handleConnectHost({ host }: { host: Participant }) {
   console.log("Event: connectHost");
 
   const setHost = useMeeting.getState().setHost;
-  setHost(host);
+  setHost({
+    ...host,
+    micOn: false,
+    cameraOn: false,
+    handRaise: false,
+    hasJoinedMeeting: true,
+  });
 }
 
 export function handleRequestToJoinMeeting({
@@ -42,7 +53,13 @@ export function handleInformOthersAboutNewParticipant({
   const setNewlyJoinedParticipant =
     useMeeting.getState().setNewlyJoinedParticipant;
 
-  const participant = { ...newParticipant, micOn: true, cameraOn: true };
+  const participant = {
+    ...newParticipant,
+    micOn: true,
+    cameraOn: true,
+    handRaise: false,
+    hasJoinedMeeting: true,
+  };
 
   addNewParticipant(participant);
   setNewlyJoinedParticipant(participant);
@@ -60,21 +77,23 @@ export function handleInformNewParticipantAboutOthers({
   console.log("Event: informNewParticipantAboutOthers");
 
   const setOtherParticipants = useMeeting.getState().setOtherParticipants;
-  const setNewlyJoinedParticipant =
-    useMeeting.getState().setNewlyJoinedParticipant;
+  const setCurrentParticipant = useMeeting.getState().setCurrentParticipant;
 
-  const newlyJoinedParticipant = {
+  setCurrentParticipant({
     ...newParticipant,
-    micOn: true,
-    cameraOn: true,
-  };
+    micOn: false,
+    cameraOn: false,
+    handRaise: false,
+    hasJoinedMeeting: true,
+  });
+
   const participants = otherParticipants.map((participant) => ({
     ...participant,
     micOn: true,
     cameraOn: true,
+    handRaise: false,
+    hasJoinedMeeting: true,
   }));
-
-  setNewlyJoinedParticipant(newlyJoinedParticipant);
   setOtherParticipants(participants);
 
   // Create Peer Connections for other participants
@@ -83,12 +102,15 @@ export function handleInformNewParticipantAboutOthers({
   });
 }
 
-export function handelDenyJoiningMeeting({
+export async function handelDenyJoiningMeeting({
   newParticipant,
 }: {
   newParticipant: Participant;
 }) {
   console.log("Event: denyJoiningMeeting");
+  const { id: userId, meetingId } = newParticipant;
+
+  await deleteMeetingHistory(userId, meetingId);
 
   const ws = getWSConnection();
   ws.close();
@@ -110,16 +132,46 @@ export function handleInformOthersAboutLeftParticipant({
 }
 
 export function handleReceiveMessage({
+  _id,
   senderId,
+  sendTo,
   meetingId,
   chatMessage,
   files,
-}: {
-  senderId: string;
-  meetingId: string;
-  chatMessage: string;
-  files: File[];
-}) {
+}: ChatPayload) {
   const setChat = useChat.getState().setChat;
-  setChat({ senderId, chatMessage, files });
+  setChat({ _id, senderId, sendTo, meetingId, chatMessage, files });
+}
+
+export function handleHandRaise(payload: HandRaisePayload) {
+  console.log("Event: HandRaise");
+
+  const { handRaise, handRaiserId } = payload;
+
+  const setOtherParticipantHandRaise =
+    useMeeting.getState().setOtherParticipantHandRaise;
+  setOtherParticipantHandRaise(handRaise, handRaiserId);
+}
+
+export async function handleEndMeeting(payload: null) {
+  console.log("Event: handleEndMeeting");
+  const resetMeeting = useMeeting.getState().resetMeeting;
+  const resetMeetingMedia = useMeetingMedia.getState().resetMeetingMedia;
+  const resetChat = useChat.getState().resetChat;
+  const currentParticipant = useMeeting.getState().currentParticipant;
+  const setIsEnded = useMeeting.getState().setIsEnded;
+  if (!currentParticipant) return;
+
+  setIsEnded(true);
+
+  await saveEndMeetingHistory(
+    currentParticipant.id,
+    currentParticipant.isHost,
+    currentParticipant.meetingId,
+  );
+
+  resetMeeting();
+  resetMeetingMedia();
+  resetChat();
+  redirect("/dashboard");
 }

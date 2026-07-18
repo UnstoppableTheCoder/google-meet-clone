@@ -8,6 +8,7 @@ import Image from "next/image";
 export default function ParticipantsList() {
   const otherParticipants = useMeeting((state) => state.otherParticipants);
   const currentParticipant = useMeeting((state) => state.currentParticipant);
+  if (!currentParticipant) return;
   const allParticipants = [currentParticipant, ...otherParticipants];
 
   const setMicOn = useMeeting((state) => state.setCurrentParticipantMic);
@@ -70,7 +71,7 @@ export default function ParticipantsList() {
               <div className="bg-neutral text-neutral-content w-8 rounded-full">
                 <span className="flex items-center justify-center h-full">
                   <Image
-                    src={participant.profile}
+                    src={participant.image}
                     alt="logo"
                     width={50}
                     height={50}

@@ -3,6 +3,8 @@ import { handleSDP_Process } from "@/helpers/webrtc-process.helper";
 import {
   handelDenyJoiningMeeting,
   handleConnectHost,
+  handleEndMeeting,
+  handleHandRaise,
   handleInformNewParticipantAboutOthers,
   handleInformOthersAboutLeftParticipant,
   handleInformOthersAboutNewParticipant,
@@ -43,6 +45,14 @@ export function handleNormalProcess(data: any) {
 
     case types.RECEIVE_MESSAGE:
       handleReceiveMessage(data.payload);
+      break;
+
+    case types.HAND_RAISE:
+      handleHandRaise(data.payload);
+      break;
+
+    case types.END_MEETING:
+      handleEndMeeting(data.payload);
       break;
 
     default:

@@ -6,17 +6,20 @@ import {
   CardTitle,
 } from "@repo/ui/components/card";
 import { Input } from "@repo/ui/components/input";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { changePasswordSchema } from "@/validation/user.validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { revokeOtherSessions } from "better-auth/api";
 import { changePassword } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { cn } from "@repo/ui/lib/utils";
+import { Label } from "@repo/ui/components/label";
 type ChangePassword = z.infer<typeof changePasswordSchema>;
 
 export default function ChangePassword() {
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -42,53 +45,106 @@ export default function ChangePassword() {
     reset();
   };
 
+  const handleResetPasswordForm = () => {
+    reset();
+  };
+
   return (
-    <Card className="bg-base-100 border border-base-300">
-      <CardHeader>
-        <CardTitle className="text-base-content">Change Password</CardTitle>
+    <Card className="rounded-2xl border border-border bg-card shadow-xl">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          Change Password
+        </CardTitle>
+
+        <p className="text-sm text-muted-foreground">
+          Update your password to keep your account secure.
+        </p>
       </CardHeader>
 
-      <form className="space-y-4 px-4 flex flex-col" onSubmit={handleSubmit(onSubmit)}>
-        <Input
-          type="password"
-          placeholder="Current Password"
-          className="text-white"
-          {...register("currentPassword")}
-        />
-        <div className="text-red-600">
-          {errors.currentPassword && errors.currentPassword.message}
-        </div>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="current-password" className="text-sm font-medium">
+              Current Password
+            </Label>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
             <Input
+              id="current-password"
               type="password"
-              placeholder="New Password"
-              className="text-white"
-              {...register("newPassword")}
+              placeholder="Enter your current password"
+              className="h-11 rounded-xl"
+              {...register("currentPassword")}
             />
-            <div className="text-red-600">
-              {errors.newPassword && errors.newPassword.message}
+
+            {errors.currentPassword && (
+              <p className="text-sm font-medium text-destructive">
+                {errors.currentPassword.message}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-password" className="text-sm font-medium">
+                New Password
+              </Label>
+
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Enter a new password"
+                className="h-11 rounded-xl"
+                {...register("newPassword")}
+              />
+
+              {errors.newPassword && (
+                <p className="text-sm font-medium text-destructive">
+                  {errors.newPassword.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password" className="text-sm font-medium">
+                Confirm Password
+              </Label>
+
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirm your new password"
+                className="h-11 rounded-xl"
+                {...register("confirmPassword")}
+              />
+
+              {errors.confirmPassword && (
+                <p className="text-sm font-medium text-destructive">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
           </div>
 
-          <div>
-            <Input
-              type="password"
-              placeholder="Confirm Password"
-              className="text-white"
-              {...register("confirmPassword")}
-            />
-            <div className="text-red-600">
-              {errors.confirmPassword && errors.confirmPassword.message}
-            </div>
-          </div>
-        </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetPasswordForm}
+              className="h-11 rounded-xl px-6"
+            >
+              Reset
+            </Button>
 
-        <Button className="btn btn-primary ml-auto" type="submit">
-          {isSubmitting ? "Updating" : "Update Password"}
-        </Button>
-      </form>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-11 rounded-xl px-6 font-semibold shadow-sm transition-all duration-200 hover:shadow-md"
+            >
+              {isSubmitting ? "Updating Password..." : "Update Password"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
     </Card>
   );
 }

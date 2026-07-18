@@ -3,6 +3,7 @@ import { handleIsRecording, handleScreenShare } from "@/lib/peer-manager";
 import { useMeetingMedia } from "@/store/meeting-media";
 import { Button } from "@repo/ui/components/button";
 import {
+  Hand,
   MessageSquare,
   Mic,
   MicOff,
@@ -18,7 +19,17 @@ import EndMeetingModal from "./end-meeting-modal";
 import useMeetingContext from "../../context/use-meeting-context";
 import { useMeeting } from "@/store/meeting";
 import { cn } from "@repo/ui/lib/utils";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { handleSendHandRaise } from "@/lib/hand-raise";
+
+type OptionsType =
+  | "mic"
+  | "camera"
+  | "screen-share"
+  | "is-recording"
+  | "hand-raise"
+  | "chats"
+  | "participants"
+  | "end-meeting";
 
 export default function MediaControllers() {
   const context = useMeetingContext();
@@ -28,18 +39,19 @@ export default function MediaControllers() {
   const activePanel = useMeeting((state) => state.activePanel);
   const screenShare = useMeetingMedia((state) => state.screenShare);
   const isRecording = useMeetingMedia((state) => state.isRecording);
-  const setScreenShare = useMeetingMedia((state) => state.setScreenShare);
-  const setIsRecording = useMeetingMedia((state) => state.setIsRecording);
   const endMeetingRef = useRef<HTMLDialogElement | null>(null);
 
   const currentParticipant = useMeeting((state) => state.currentParticipant);
+  const setCurrentParticipantHandRaise = useMeeting(
+    (state) => state.setCurrentParticipantHandRaise,
+  );
   const setCameraOn = useMeeting((state) => state.setCurrentParticipantCamera);
   const setMicOn = useMeeting((state) => state.setCurrentParticipantMic);
 
   if (!currentParticipant) return;
   const { cameraOn, micOn } = currentParticipant;
 
-  const handleClick = (type: string) => {
+  const handleClick = (type: OptionsType) => {
     switch (type) {
       case "mic": {
         const newState = !micOn;
@@ -67,6 +79,17 @@ export default function MediaControllers() {
         break;
       }
 
+      case "hand-raise": {
+        const newState = !currentParticipant.handRaise;
+        setCurrentParticipantHandRaise(newState);
+        handleSendHandRaise(
+          newState,
+          currentParticipant.id,
+          currentParticipant.meetingId,
+        );
+        break;
+      }
+
       case "chats": {
         setActivePanel(type);
         break;
@@ -88,90 +111,137 @@ export default function MediaControllers() {
   };
 
   const activeBtnStyle =
-    "bg-green-500 text-white hover:bg-green-600 hover:text-white";
+    "bg-primary text-primary-foreground shadow-md hover:bg-primary/90";
 
   return (
     <>
-      <div className="flex justify-center gap-4 p-4 border-t border-base-300 bg-base-100">
-        {/* MIC */}
-        <Button
-          variant="secondary"
-          className={cn("py-5", micOn && activeBtnStyle)}
-          onClick={() => handleClick("mic")}
-        >
-          {micOn ? <Mic className="size-6" /> : <MicOff className="size-6" />}
-        </Button>
-
-        {/* Video */}
-        <Button
-          variant="secondary"
-          className={cn("py-5", cameraOn && activeBtnStyle)}
-          onClick={() => handleClick("camera")}
-        >
-          {cameraOn ? (
-            <Video className="size-6" />
-          ) : (
-            <VideoOff className="size-6" />
-          )}
-        </Button>
-
-        {/* Screen Share */}
-        <div onClick={() => handleClick("screen-share")}>
+      <footer className="border-t border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Mic */}
           <Button
-            variant="secondary"
-            className={cn("py-5", screenShare && activeBtnStyle)}
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("mic")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              micOn ? activeBtnStyle : "hover:bg-accent",
+            )}
           >
-            <MonitorUp className="size-6" />
+            {micOn ? (
+              <Mic className="h-5 w-5" />
+            ) : (
+              <MicOff className="h-5 w-5" />
+            )}
+          </Button>
+
+          {/* Camera */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("camera")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              cameraOn ? activeBtnStyle : "hover:bg-accent",
+            )}
+          >
+            {cameraOn ? (
+              <Video className="h-5 w-5" />
+            ) : (
+              <VideoOff className="h-5 w-5" />
+            )}
+          </Button>
+
+          {/* Screen Share */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("screen-share")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              screenShare ? activeBtnStyle : "hover:bg-accent",
+            )}
+          >
+            <MonitorUp className="h-5 w-5" />
+          </Button>
+
+          {/* Recording */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("is-recording")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              isRecording ? activeBtnStyle : "hover:bg-accent",
+            )}
+          >
+            <Image
+              src={isRecording ? "/recording-on.png" : "/recording-off.png"}
+              alt="Recording"
+              width={22}
+              height={22}
+            />
+          </Button>
+
+          {/* Raise Hand */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("hand-raise")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              currentParticipant.handRaise ? activeBtnStyle : "hover:bg-accent",
+            )}
+          >
+            <Hand className="h-5 w-5" />
+          </Button>
+
+          <div className="mx-2 hidden h-8 w-px bg-border md:block" />
+
+          {/* Chat */}
+          <Button
+            ref={bottomBarChatBtnRef}
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("chats")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              activePanel === "chats" ? activeBtnStyle : "hover:bg-accent",
+            )}
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Button>
+
+          {/* Participants */}
+          <Button
+            ref={bottomBarParticipantBtnRef}
+            variant="ghost"
+            size="icon"
+            onClick={() => handleClick("participants")}
+            className={cn(
+              "h-12 w-12 rounded-2xl transition-all duration-200",
+              activePanel === "participants"
+                ? activeBtnStyle
+                : "hover:bg-accent",
+            )}
+          >
+            <Users className="h-5 w-5" />
+          </Button>
+
+          <div className="mx-2 hidden h-8 w-px bg-border md:block" />
+
+          {/* Leave */}
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={() => handleClick("end-meeting")}
+            className="h-12 w-12 rounded-2xl shadow-sm"
+          >
+            <PhoneOff className="h-5 w-5" />
           </Button>
         </div>
 
-        {/* Recording */}
-        <Button
-          variant="secondary"
-          className={cn("font-bold py-5", isRecording && activeBtnStyle)}
-          onClick={() => handleClick("is-recording")}
-        >
-          <Image
-            src={isRecording ? "/recording-on.png" : "/recording-off.png"}
-            alt="recording"
-            width={30}
-            height={30}
-          />
-        </Button>
-
-        {/* Chats */}
-        <Button
-          ref={bottomBarChatBtnRef}
-          variant="secondary"
-          className={cn("py-5", activePanel === "chats" && activeBtnStyle)}
-          onClick={() => handleClick("chats")}
-        >
-          <MessageSquare className="size-6" />
-        </Button>
-
-        {/* Participants */}
-        <Button
-          ref={bottomBarParticipantBtnRef}
-          variant="secondary"
-          className={cn(
-            "py-5",
-            activePanel === "participants" && activeBtnStyle,
-          )}
-          onClick={() => handleClick("participants")}
-        >
-          <Users className="size-6" />
-        </Button>
-
-        <Button
-          variant="destructive"
-          className="py-5"
-          onClick={() => handleClick("end-meeting")}
-        >
-          <PhoneOff className="size-6" />
-        </Button>
-      </div>
-
-      <EndMeetingModal endMeetingRef={endMeetingRef} />
+        <EndMeetingModal endMeetingRef={endMeetingRef} />
+      </footer>
     </>
   );
 }

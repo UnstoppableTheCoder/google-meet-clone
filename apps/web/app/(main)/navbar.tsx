@@ -1,82 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/ui/components/avatar";
-import { signOut, useSession } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
+import AvatarDropDown from "./components/avatar-dropdown";
 
 export default function Navbar() {
-  const router = useRouter();
-
-  const { data: session } = useSession();
-  const user = session?.user;
-
-  const handleLogout = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/sign-in"); // redirect to login page
-        },
-      },
-    });
-  };
-
   return (
-    <div className="navbar bg-base-100 border-b border-base-300 px-6 text-base-content space-x-5">
-      {/* Left Side */}
-      <div className="flex-1">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-16 items-center justify-between px-6">
+        {/* Logo */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 text-xl font-semibold"
+          className="flex items-center gap-3 transition-opacity hover:opacity-90"
         >
-          🎥 MeetClone
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            🎥
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-lg font-semibold tracking-tight">
+              MeetFlow
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Video Meetings
+            </span>
+          </div>
         </Link>
-      </div>
 
-      {/* Center Navigation */}
-      <div className="hidden md:flex gap-4">
-        <Link href="/dashboard" className="btn btn-ghost">
-          Dashboard
-        </Link>
-      </div>
-
-      {/* Right Side */}
-      <div className="flex items-center gap-3">
-        {/* Avatar Dropdown */}
-        <div className="dropdown dropdown-end">
-          <label tabIndex={0} className="cursor-pointer">
-            <Avatar className="w-10 h-10">
-              {user && (
-                <Image
-                  src={user.profileUrl}
-                  alt="Profile image"
-                  width={50}
-                  height={50}
-                  className="rounded-full"
-                />
-              )}
-            </Avatar>
-          </label>
-
-          <ul
-            tabIndex={0}
-            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-3"
+        {/* Navigation */}
+        <nav className="hidden items-center gap-2 md:flex">
+          <Link
+            href="/dashboard"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <li>
-              <Link href="/profile">Profile</Link>
-            </li>
+            Dashboard
+          </Link>
+        </nav>
 
-            <li>
-              <div onClick={handleLogout}>Log out</div>
-            </li>
-          </ul>
+        {/* Profile */}
+        <div className="flex items-center gap-3">
+          <AvatarDropDown />
         </div>
       </div>
-    </div>
+    </header>
   );
 }

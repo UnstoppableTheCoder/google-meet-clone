@@ -1,14 +1,12 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/card";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
+import ForgotPasswordForm from "./forgot-password-form";
 
 export default function ForgotPasswordPage() {
   return (
@@ -22,21 +20,7 @@ export default function ForgotPasswordPage() {
         </CardHeader>
 
         <CardContent>
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="vipendra@email.com" />
-            </div>
-
-            <Button className="w-full">Send Reset Link</Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Remember your password?{" "}
-              <a href="/sign-in" className="link link-primary font-medium">
-                Sign in
-              </a>
-            </p>
-          </form>
+          <ForgotPasswordForm />
         </CardContent>
       </Card>
     </div>

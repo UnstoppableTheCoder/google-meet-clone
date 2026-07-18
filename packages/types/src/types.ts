@@ -1,11 +1,13 @@
 export interface Participant {
   id: string;
   username: string;
-  profile: string;
+  image: string;
   meetingId: string;
   meetingTitle: string;
   micOn?: boolean;
   cameraOn?: boolean;
+  handRaise?: boolean;
+  hasJoinedMeeting?: boolean;
   isHost: boolean;
 }
 
@@ -21,13 +23,5 @@ export type FileType =
 export type File = {
   fileName: string;
   fileType: FileType;
-  fileUrl: string;
+  fileUrl: string; // Todo: Change it to fileBlobUrl
 };
-
-export interface Chat {
-  id: string;
-  senderId: string;
-  meetingId: string;
-  chatMessage: string;
-  files: File[];
-}

@@ -12,7 +12,7 @@ export default function ParticipantPanel() {
   return (
     <div className="w-105 border-l border-base-300 bg-base-100 flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-base-300 flex justify-between items-center">
+      <div className="p-4 border-b border-base-300 flex justify-between items-center h-[6%]">
         <h3 className="font-semibold text-base-content">
           Participants ({otherParticipants.length})
         </h3>

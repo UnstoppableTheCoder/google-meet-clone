@@ -1,8 +1,7 @@
 "use client";
 
-import { MouseEvent, useEffect, useRef, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
 import { useMeeting } from "@/store/meeting";
 import VideoSection from "./components/video/video-section";
 import Panels from "./components/panels/panels";
@@ -11,21 +10,15 @@ import { signaling } from "@/lib/signaling";
 import useMeetingContext from "./context/use-meeting-context";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth-client";
+import { saveMeetingHistory } from "./action";
+import { Loader } from "lucide-react";
+import { cn } from "@repo/ui/lib/utils";
+import { Card, CardContent } from "@repo/ui/components/card";
+// import { saveMeetingHistory } from "./action";
 
 export default function MeetingPage() {
-  // const initializedRef = useRef(false);
-
   const { meetingId } = useParams<{ meetingId: string }>();
   const context = useMeetingContext();
-  if (!context) return;
-  const {
-    wsRef,
-    panelsRef,
-    topBarChatBtnRef,
-    topBarParticipantBtnRef,
-    bottomBarChatBtnRef,
-    bottomBarParticipantBtnRef,
-  } = context;
 
   const setCurrentParticipant = useMeeting(
     (state) => state.setCurrentParticipant,
@@ -37,24 +30,30 @@ export default function MeetingPage() {
   );
   const setLeftParticipant = useMeeting((state) => state.setLeftParticipant);
   const joiningParticipants = useMeeting((state) => state.joiningParticipants);
-
-  console.log("Session: ", useSession());
-
+  const currentParticipant = useMeeting((state) => state.currentParticipant);
+  const isEnded = useMeeting((state) => state.isEnded);
   const { data } = useSession();
+  const user = data?.user;
+  const [renderPermissionMessage, setRenderPermission] = useState(false);
 
   // Initialize
   useEffect(() => {
-    const username = data?.user.name;
-    const profile = data?.user.profileUrl;
+    if (!context) return;
+    const { wsRef } = context;
+
+    const username = user?.name;
+    const image = user?.image;
     const sessionToken = data?.session.token;
-    const meetingTitle = "VIP Meeting";
-    const id = uuidv4();
+    // const meetingTitle = prompt("Enter the meeting Title");
+    const meetingTitle = "Google Meet";
+    const userId = user?.id;
+
     if (
       !username ||
       !meetingTitle ||
       !meetingId ||
-      !id ||
-      !profile ||
+      !userId ||
+      !image ||
       !sessionToken
     ) {
       console.log("All the fields are required");
@@ -63,15 +62,27 @@ export default function MeetingPage() {
 
     // Set the Current Participant in the state
     setCurrentParticipant({
-      id,
+      id: userId,
       username,
-      profile,
+      image,
       meetingId,
       meetingTitle,
+      hasJoinedMeeting: false,
       isHost: false,
     });
 
-    const ws = setWsConnection(id, meetingId, sessionToken);
+    // Save Meeting History
+    const meetingPayload = {
+      userId,
+      isHost: false,
+      meetingId,
+      meetingTitle,
+      startTime: new Date(),
+      endTime: null,
+    };
+    saveMeetingHistory(meetingPayload);
+
+    const ws = setWsConnection(userId, meetingId, sessionToken);
     if (ws) {
       wsRef.current = ws;
       signaling(ws);
@@ -82,6 +93,7 @@ export default function MeetingPage() {
     };
   }, [data]);
 
+  // leftParticipant
   useEffect(() => {
     if (leftParticipant) {
       toast.warning(`${leftParticipant.username} left the meeting`);
@@ -90,12 +102,14 @@ export default function MeetingPage() {
     setLeftParticipant(null);
   }, [leftParticipant]);
 
+  // newlyJoinedParticipant
   useEffect(() => {
     if (newlyJoinedParticipant) {
       toast.warning(`${newlyJoinedParticipant.username} joined the meeting`);
     }
   }, [newlyJoinedParticipant]);
 
+  // joiningParticipants
   useEffect(() => {
     const arrLength = joiningParticipants.length;
     if (arrLength > 0) {
@@ -106,7 +120,33 @@ export default function MeetingPage() {
     }
   }, [joiningParticipants]);
 
+  useEffect(() => {
+    setTimeout(() => setRenderPermission(true), 500);
+  }, []);
+
+  useEffect(() => {
+    if (currentParticipant?.hasJoinedMeeting) {
+      setRenderPermission(false);
+    }
+  }, [currentParticipant]);
+
+  useEffect(() => {
+    if (isEnded) {
+      toast.success("Host ended the meeting");
+    }
+  }, [isEnded]);
+
+  // Handle Chat & Participant buttons clicks
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (!context) return;
+    const {
+      panelsRef,
+      topBarChatBtnRef,
+      topBarParticipantBtnRef,
+      bottomBarChatBtnRef,
+      bottomBarParticipantBtnRef,
+    } = context;
+
     const target = e.target as Node;
     const panelsClicked = panelsRef.current?.contains(target);
     const topBarChatBtnClicked = topBarChatBtnRef.current?.contains(target);
@@ -130,10 +170,34 @@ export default function MeetingPage() {
 
   return (
     <div
-      className="h-screen flex bg-base-200 text-base-content"
+      className="relative flex h-screen overflow-hidden bg-background"
       onClick={handleClick}
     >
+      {renderPermissionMessage && !currentParticipant?.hasJoinedMeeting && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md">
+          <Card className="w-full max-w-lg rounded-3xl border border-border bg-card shadow-2xl">
+            <CardContent className="flex flex-col items-center gap-6 p-10 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Loader className="h-8 w-8 animate-spin text-primary" />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold tracking-tight">
+                  Waiting for the host
+                </h2>
+
+                <p className="text-sm leading-6 text-muted-foreground">
+                  You've requested to join this meeting. The meeting host will
+                  let you in shortly.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <VideoSection />
+
       <Panels />
     </div>
   );

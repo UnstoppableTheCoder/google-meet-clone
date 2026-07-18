@@ -16,15 +16,15 @@ export default function ChatFiles({
   const [loading, setLoading] = useState(false);
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
 
-  const baseUrl = "https://uploads.codingthecode.site";
-
   useEffect(() => {
     setLoading(true);
 
     const getUrl = async () => {
       const results = await Promise.all(
         chat.files.map(async (file) => {
-          const response = await fetch(`${baseUrl}/${file.fileName}`);
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_UPLOADS_BASE_URL}/${file.fileName}`,
+          );
           const blobData = await response.blob();
           const url = URL.createObjectURL(blobData);
 
@@ -49,6 +49,7 @@ export default function ChatFiles({
         {/* Slide */}
         {chatFiles.map((file, index) => (
           <div
+            key={`${chat.id}${index}`}
             id={`${chat.id}${index}`}
             className="carousel-item relative w-full"
           >

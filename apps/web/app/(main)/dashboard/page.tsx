@@ -1,97 +1,88 @@
 "use client";
 
-import { Card, CardContent } from "@repo/ui/components/card";
-import crypto from "crypto";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
+import JoinMeeting from "./components/join-meeting";
+import RecentMeetings from "./components/recent-meetings";
+import { Button } from "@repo/ui/components/button";
 
 export default function DashboardPage() {
-  const [joinMeetingId, setJoinMeetingId] = useState("");
-  const router = useRouter();
-  const meetingId = crypto.randomBytes(5).toString("hex");
-
-  const handleCreateMeeting = () => {
-    router.push(`/meeting/${meetingId}`);
-  };
-
-  const handleJoinMeeting = () => {
-    router.push(`/meeting/${joinMeetingId}`);
-  };
-
   return (
-    <div className="min-h-screen bg-base-200 text-base-content p-6">
-      <div className="max-w-6xl mx-auto space-y-10">
-        <h1 className="text-3xl font-bold text-base-content">Dashboard</h1>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-10 pt-24">
+        {/* Hero */}
+        <section className="mb-10 flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+          <div className="space-y-3">
+            <span className="inline-flex w-fit items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              👋 Welcome back
+            </span>
 
-        {/* Start / Join Meeting */}
-        <div className="flex gap-4 flex-wrap">
-          <button className="btn btn-primary" onClick={handleCreateMeeting}>
-            New Meeting
-          </button>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+              Dashboard
+            </h1>
 
-          <input
-            placeholder="Enter meeting code"
-            className="w-72 border-2 pl-3 rounded-sm"
-            onChange={(e) => setJoinMeetingId(e.target.value)}
-            value={joinMeetingId}
-          />
-
-          <button className="btn btn-outline" onClick={handleJoinMeeting}>
-            Join
-          </button>
-        </div>
-
-        {/* Meeting Actions */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-base-100 border border-base-300">
-            <div className="p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-base-content">
-                Instant Meeting
-              </h3>
-
-              <p className="text-sm text-base-content/70">
-                Start a meeting instantly.
-              </p>
-
-              <button className="btn btn-primary btn-sm">Start</button>
-            </div>
+            <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+              Start a new meeting, join with a meeting code, or quickly continue
+              from your recent conversations.
+            </p>
           </div>
 
-          <div className="bg-base-100 border border-base-300">
-            <div className="p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-base-content">
-                Meeting History
-              </h3>
+          <div className="grid w-full gap-4 sm:grid-cols-2 lg:w-auto">
+            <div className="rounded-2xl border border-border bg-card px-6 py-5 shadow-sm">
+              <p className="text-sm text-muted-foreground">Meetings</p>
+              <p className="mt-2 text-3xl font-bold">24</p>
+            </div>
 
-              <p className="text-sm text-base-content/70">
-                View your past meetings.
-              </p>
-
-              <Link href="/meetings">
-                <button className="btn btn-outline  btn-sm">View</button>
-              </Link>
+            <div className="rounded-2xl border border-border bg-card px-6 py-5 shadow-sm">
+              <p className="text-sm text-muted-foreground">Hours</p>
+              <p className="mt-2 text-3xl font-bold">18h</p>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Quick Actions */}
+        <section className="rounded-3xl border border-border bg-card shadow-xl">
+          <div className="border-b border-border px-8 py-6">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Quick Actions
+            </h2>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create a meeting or join one using a meeting code.
+            </p>
+          </div>
+
+          <div className="p-8">
+            <JoinMeeting />
+          </div>
+        </section>
 
         {/* Recent Meetings */}
-        <div className="space-y-4 ">
-          <h2 className="text-xl font-semibold text-base-content">
-            Recent Meetings
-          </h2>
+        <section className="mt-8 rounded-3xl border border-border bg-card shadow-xl">
+          <div className="flex items-center justify-between border-b border-border px-8 py-6">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">
+                Recent Meetings
+              </h2>
 
-          <div className="bg-base-100 border border-base-content rounded-lg ">
-            <div className="p-4 flex justify-between">
-              <div>
-                <p className="font-medium ">Team Standup</p>
-                <p className="text-sm text-base-content/60">
-                  Yesterday • 30 min
-                </p>
-              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Access your latest meetings in one click.
+              </p>
             </div>
+
+            <Button variant="ghost" className="rounded-xl">
+              View All
+            </Button>
           </div>
-        </div>
+
+          <div className="p-8">
+            <RecentMeetings />
+          </div>
+        </section>
       </div>
     </div>
   );

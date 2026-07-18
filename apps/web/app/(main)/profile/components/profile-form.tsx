@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@repo/ui/components/card";
 import { Input } from "@repo/ui/components/input";
+import { Label } from "@repo/ui/components/label";
 import React, { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -36,11 +37,11 @@ export default function ProfileForm({
 
   const onSubmit = async (payload: ProfileSchema) => {
     const file = payload.file;
+    console.log(file);
 
     const formData = new FormData();
 
     if (file) {
-      console.log(file[0]);
       if (
         file[0].type !== "image/png" &&
         file[0].type !== "image/jpeg" &&
@@ -53,7 +54,7 @@ export default function ProfileForm({
       formData.append("file", file.item(0));
     }
 
-    const response = await fetch("http://localhost:3000/api/upload-image", {
+    const response = await fetch(`/api/upload-image`, {
       method: "POST",
       body: formData,
     });
@@ -62,7 +63,7 @@ export default function ProfileForm({
 
     const { data, error } = await updateUser({
       name: payload.name,
-      profileUrl: result.url,
+      image: result.url,
     });
 
     if (error) {
@@ -77,37 +78,61 @@ export default function ProfileForm({
   if (!isEditing) return;
 
   return (
-    <Card className="bg-base-100 border border-base-300 shadow-xl text-base-content">
-      <CardHeader>
-        <CardTitle>Account Settings</CardTitle>
+    <Card className="rounded-2xl border border-border bg-card shadow-xl">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          Account Settings
+        </CardTitle>
+
+        <p className="text-sm text-muted-foreground">
+          Update your profile information and profile picture.
+        </p>
       </CardHeader>
 
       <CardContent>
-        <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-1">
-            <label className="text-sm text-base-content/70">Full Name</label>
-            <Input defaultValue={user?.name} {...register("name")} />
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium">
+              Full Name
+            </Label>
 
-          <div className="space-y-1 flex flex-col">
-            <label className="text-sm text-base-content/70">Profile</label>
-            <input
-              type="file"
-              className="border rounded-lg px-2 py-1.5"
-              {...register("file")}
+            <Input
+              id="name"
+              defaultValue={user?.name}
+              {...register("name")}
+              className="h-11 rounded-xl"
             />
           </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="file" className="text-sm font-medium">
+              Profile Picture
+            </Label>
+
+            <Input
+              id="file"
+              type="file"
+              {...register("file")}
+              className="h-11 rounded-xl file:mr-4 file:border-0 file:bg-transparent file:text-sm file:font-medium"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
             <Button
-              className="btn btn-primary"
-              type="submit"
+              type="button"
+              variant="outline"
               onClick={() => setIsEditing(false)}
+              className="h-11 rounded-xl px-6"
             >
               Cancel
             </Button>
-            <Button className="btn btn-primary" type="submit">
-              {isSubmitting ? "Saving Changes" : "Save Changes"}
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-11 rounded-xl px-6 font-semibold shadow-sm transition-all duration-200 hover:shadow-md"
+            >
+              {isSubmitting ? "Saving Changes..." : "Save Changes"}
             </Button>
           </div>
         </form>
