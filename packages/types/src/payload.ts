@@ -6,6 +6,13 @@ export interface HandRaisePayload {
   meetingId: string;
 }
 
+export interface MediaOnPayload {
+  cameraOn: boolean;
+  micOn: boolean;
+  participantId: string;
+  meetingId: string;
+}
+
 export interface ChatPayload {
   _id: string;
   senderId: string;

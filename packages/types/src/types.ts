@@ -1,14 +1,23 @@
 export interface Participant {
   id: string;
   username: string;
-  image: string;
+  avatar: string;
   meetingId: string;
   meetingTitle: string;
-  micOn?: boolean;
-  cameraOn?: boolean;
-  handRaise?: boolean;
-  hasJoinedMeeting?: boolean;
   isHost: boolean;
+  isSelf?: boolean;
+  micOn: boolean;
+  cameraOn: boolean;
+  handRaised: boolean;
+  hasJoinedMeeting?: boolean;
+  speaking?: boolean;
+  hue?: number;
+  initials?: string;
+  localSettings?: {
+    micOn?: boolean;
+    cameraOn?: boolean;
+    handRaised?: boolean;
+  };
 }
 
 export type FileType =

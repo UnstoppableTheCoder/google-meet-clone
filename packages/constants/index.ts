@@ -15,6 +15,7 @@ export const types = {
   RECEIVE_MESSAGE: "RECEIVE_MESSAGE",
   HAND_RAISE: "HAND_RAISE",
   INFORM_LEFT_PARTICIPANT: "INFORM_LEFT_PARTICIPANT",
+  MEDIA_ON: "MEDIA_ON",
 };
 
 export const labels = {

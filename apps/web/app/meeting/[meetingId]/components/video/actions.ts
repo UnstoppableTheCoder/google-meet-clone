@@ -13,7 +13,6 @@ export const removeChatsAndFiles = async (
 
   // Delete Files
   fileNames.forEach(async (fileName) => {
-    console.log("FileName: ", fileName);
     await s3.send(
       new DeleteObjectCommand({
         Bucket: process.env.AWS_BUCKET,

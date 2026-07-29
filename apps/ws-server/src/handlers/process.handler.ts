@@ -5,6 +5,7 @@ import {
   handleGrantJoiningPermission,
   handleHandRaise,
   handleLeaveMeeting,
+  handleMediaOn,
   handleSendMessage,
 } from "../helpers/normal_process.helper";
 import { handleSDP_Process } from "../helpers/webrtc_process.helper";
@@ -25,6 +26,10 @@ export function handleNormalProcess(data: any) {
 
     case types.HAND_RAISE:
       handleHandRaise(data.payload);
+      break;
+
+    case types.MEDIA_ON:
+      handleMediaOn(data.payload);
       break;
 
     case types.LEAVE_MEETING:

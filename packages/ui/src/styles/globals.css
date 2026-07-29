@@ -1,8 +1,4 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: all;
-}
-
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -133,3 +129,92 @@
 }
 
 @source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+
+.tile-shadow {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark .tile-shadow {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .glass {
+  background: #16181dbf;
+}
+
+.speaking-ring {
+  box-shadow:
+    0 0 0 2px #3b82f6,
+    0 0 0 6px rgb(59 130 246 / 0.35),
+    0 0 32px rgb(59 130 246 / 0.5),
+    0 0 48px rgb(59 130 246 / 0.25);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -20px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -320px) scale(1.4);
+  }
+}
+.reaction-float {
+  animation: float-up 2.6s ease-out forwards;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+.pulse-soft {
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.wave-bar {
+  animation: wave 0.9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}

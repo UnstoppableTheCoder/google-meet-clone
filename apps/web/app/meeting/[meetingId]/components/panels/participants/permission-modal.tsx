@@ -57,7 +57,7 @@ export default function PermissionModal() {
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto p-3 space-y-2 border-t-2 border-gray-500">
+    <div className="absolute bottom-30 flex flex-col overflow-y-auto p-3 space-y-2 border-t-2 border-gray-500">
       <h2 className="text-xl font-bold">
         Allow or Deny to join the meeting...
       </h2>

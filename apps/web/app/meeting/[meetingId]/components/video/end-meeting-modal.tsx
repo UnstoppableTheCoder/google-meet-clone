@@ -1,6 +1,5 @@
 import { useMeeting } from "@/store/meeting";
 import { useRouter } from "next/navigation";
-import React, { RefObject } from "react";
 import { useChat } from "@/store/chat";
 import { useMeetingMedia } from "@/store/meeting-media";
 import { removeChatsAndFiles } from "./actions";
@@ -15,13 +14,17 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
+  DialogTrigger,
 } from "@repo/ui/components/dialog";
 import { Button } from "@repo/ui/components/button";
+import { RefObject } from "react";
 
 export default function EndMeetingModal({
-  endMeetingRef,
+  open,
+  onOpenChange,
 }: {
-  endMeetingRef: RefObject<HTMLDialogElement | null>;
+  open: boolean;
+  onOpenChange: any;
 }) {
   const router = useRouter();
   const currentParticipant = useMeeting((state) => state.currentParticipant);
@@ -96,11 +99,8 @@ export default function EndMeetingModal({
   };
 
   return (
-    <Dialog>
-      <DialogContent
-        ref={endMeetingRef}
-        className="max-w-md rounded-3xl border border-border p-0 shadow-2xl"
-      >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md rounded-3xl border border-border p-0 shadow-2xl">
         <div className="p-8">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
             <PhoneOff className="h-8 w-8 text-destructive" />

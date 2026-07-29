@@ -22,7 +22,7 @@ export default function SentMessage({
         <div className="chat-image avatar">
           <div className="w-10 rounded-full">
             <Image
-              src={currentParticipant.image}
+              src={currentParticipant.avatar}
               alt="profile"
               width={50}
               height={50}

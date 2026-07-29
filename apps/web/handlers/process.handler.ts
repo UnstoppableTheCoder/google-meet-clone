@@ -8,6 +8,7 @@ import {
   handleInformNewParticipantAboutOthers,
   handleInformOthersAboutLeftParticipant,
   handleInformOthersAboutNewParticipant,
+  handleMediaOn,
   handleNotRequestingToJoinMeeting,
   handleReceiveMessage,
   handleRequestToJoinMeeting,
@@ -49,6 +50,10 @@ export function handleNormalProcess(data: any) {
 
     case types.HAND_RAISE:
       handleHandRaise(data.payload);
+      break;
+
+    case types.MEDIA_ON:
+      handleMediaOn(data.payload);
       break;
 
     case types.END_MEETING:

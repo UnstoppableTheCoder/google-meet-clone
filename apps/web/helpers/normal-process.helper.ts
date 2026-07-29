@@ -1,4 +1,9 @@
-import { ChatPayload, HandRaisePayload, Participant } from "@repo/types";
+import {
+  ChatPayload,
+  HandRaisePayload,
+  Participant,
+  MediaOnPayload,
+} from "@repo/types";
 import { useMeeting } from "../store/meeting";
 import { getWSConnection } from "@/lib/socket-manager";
 import { redirect } from "next/navigation";
@@ -16,9 +21,6 @@ export function handleConnectHost({ host }: { host: Participant }) {
   const setHost = useMeeting.getState().setHost;
   setHost({
     ...host,
-    micOn: false,
-    cameraOn: false,
-    handRaise: false,
     hasJoinedMeeting: true,
   });
 }
@@ -53,12 +55,14 @@ export function handleInformOthersAboutNewParticipant({
   const setNewlyJoinedParticipant =
     useMeeting.getState().setNewlyJoinedParticipant;
 
-  const participant = {
+  const participant: Participant = {
     ...newParticipant,
-    micOn: true,
-    cameraOn: true,
-    handRaise: false,
     hasJoinedMeeting: true,
+    localSettings: {
+      micOn: true,
+      cameraOn: true,
+      handRaised: false,
+    },
   };
 
   addNewParticipant(participant);
@@ -81,18 +85,22 @@ export function handleInformNewParticipantAboutOthers({
 
   setCurrentParticipant({
     ...newParticipant,
-    micOn: false,
-    cameraOn: false,
-    handRaise: false,
+    localSettings: {
+      micOn: newParticipant.micOn,
+      cameraOn: newParticipant.cameraOn,
+      handRaised: newParticipant.handRaised,
+    },
     hasJoinedMeeting: true,
   });
 
   const participants = otherParticipants.map((participant) => ({
     ...participant,
-    micOn: true,
-    cameraOn: true,
-    handRaise: false,
     hasJoinedMeeting: true,
+    localSettings: {
+      micOn: true,
+      cameraOn: true,
+      handRaised: false,
+    },
   }));
   setOtherParticipants(participants);
 
@@ -151,6 +159,15 @@ export function handleHandRaise(payload: HandRaisePayload) {
   const setOtherParticipantHandRaise =
     useMeeting.getState().setOtherParticipantHandRaise;
   setOtherParticipantHandRaise(handRaise, handRaiserId);
+}
+
+export function handleMediaOn(payload: MediaOnPayload) {
+  console.log("Event: mediaOn");
+
+  const setOtherParticipantRemoteMediaOn =
+    useMeeting.getState().setOtherParticipantRemoteMediaOn;
+
+  setOtherParticipantRemoteMediaOn(payload);
 }
 
 export async function handleEndMeeting(payload: null) {

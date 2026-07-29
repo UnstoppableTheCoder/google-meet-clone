@@ -1,5 +1,5 @@
 import { ActivePanel } from "@/types/meeting.types";
-import { Participant } from "@repo/types";
+import { Participant, MediaOnPayload } from "@repo/types";
 
 export interface State {
   currentParticipant: Participant | null;
@@ -11,6 +11,7 @@ export interface State {
   openModal: boolean;
   activePanel: ActivePanel;
   isEnded: boolean;
+  pinnedId: string | null;
 }
 
 export interface Actions {
@@ -27,15 +28,20 @@ export interface Actions {
   resetJoiningParticipants: () => void;
   setOpenModal: (openModal: boolean) => void;
   setActivePanel: (activePanel: ActivePanel) => void;
-  setOtherParticipantCamera: (cameraOn: boolean, participantId: string) => void;
-  setOtherParticipantMic: (micOn: boolean, participantId: string) => void;
+  setOtherParticipantLocalCamera: (
+    cameraOn: boolean,
+    participantId: string,
+  ) => void;
+  setOtherParticipantLocalMic: (micOn: boolean, participantId: string) => void;
   setOtherParticipantHandRaise: (
     handRaise: boolean,
     handRaiserId: string,
   ) => void;
+  setOtherParticipantRemoteMediaOn: (payload: MediaOnPayload) => void;
   setCurrentParticipantCamera: (cameraOn: boolean) => void;
   setCurrentParticipantMic: (micOn: boolean) => void;
   setCurrentParticipantHandRaise: (handRaise: boolean) => void;
   setIsEnded: (isEnded: boolean) => void;
+  setPinnedId: (isPinnedId: string | null) => void;
   resetMeeting: () => void;
 }

@@ -2,6 +2,7 @@ import type {
   ChatPayload,
   HandRaisePayload,
   LeaveMeetingPayload,
+  MediaOnPayload,
   Participant,
 } from "@repo/types";
 import { connections, meetings } from "../store/state";
@@ -19,6 +20,7 @@ export function handleAskToConnect({
   newParticipant: Participant;
 }) {
   console.log("Event: askToConnect");
+
   const { meetingId, id } = newParticipant;
 
   if (!meetings[meetingId]) {
@@ -29,6 +31,8 @@ export function handleAskToConnect({
   }
 
   const meeting = meetings[meetingId];
+  console.log("MEETINGS ask to connect: ", meeting.host);
+  console.log("Participants: ", meeting.participants);
 
   const isAlreadyParticipant = meeting.participants.some((p) => p.id === id);
   if (isAlreadyParticipant) {
@@ -56,7 +60,6 @@ export function handleAskToConnect({
     // Notify the host about himself
     ws?.send(JSON.stringify(message));
     console.log("Connect host event sent");
-    console.log("ws: ", ws);
     return;
   }
 
@@ -177,6 +180,50 @@ export function handleHandRaise(payload: HandRaisePayload) {
     };
 
     ws?.send(JSON.stringify(message));
+  });
+}
+
+export function handleMediaOn(payload: MediaOnPayload) {
+  const { participantId, meetingId, cameraOn, micOn } = payload;
+
+  const meeting = meetings[meetingId];
+  if (!meeting) return;
+
+  const participant = meeting.participants.find((p) => p.id === participantId);
+  if (!participant) return;
+
+  // No changes
+  if (participant.cameraOn === cameraOn && participant.micOn === micOn) {
+    return;
+  }
+
+  // Update authoritative state
+  participant.cameraOn = cameraOn;
+  participant.micOn = micOn;
+
+  if (participant.isHost && meeting.host) {
+    meeting.host.cameraOn = cameraOn;
+    meeting.host.micOn = micOn;
+  }
+
+  // Broadcast the updated state
+  const message = JSON.stringify({
+    label: labels.NORMAL_PROCESS,
+    data: {
+      type: types.MEDIA_ON,
+      payload: {
+        participantId,
+        meetingId,
+        cameraOn: participant.cameraOn,
+        micOn: participant.micOn,
+      },
+    },
+  });
+
+  meeting.participants.forEach((p) => {
+    if (p.id === participantId) return;
+
+    connections[p.id]?.send(message);
   });
 }
 

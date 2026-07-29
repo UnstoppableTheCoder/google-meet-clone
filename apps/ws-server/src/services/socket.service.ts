@@ -45,15 +45,20 @@ export function handleIsAlreadyParticipant(
     (p) => p.id !== participant.id,
   );
 
-  if (meeting.host?.id === participant.id) {
-    participant.isHost = true;
+  const newParticipant = meeting.participants.find(
+    (p) => p.id === participant.id,
+  );
+  if (!newParticipant) return;
 
-    const ws = connections[participant.id];
+  if (meeting.host?.id === newParticipant.id) {
+    // participant.isHost = true;
+
+    const ws = connections[newParticipant.id];
     const message = {
       label: labels.NORMAL_PROCESS,
       data: {
         type: types.CONNECT_HOST,
-        payload: { host: participant },
+        payload: { host: newParticipant },
       },
     };
 
@@ -62,10 +67,10 @@ export function handleIsAlreadyParticipant(
   }
 
   // Inform others about the participant
-  informOthersAboutNewParticipant(otherParticipants, participant);
+  informOthersAboutNewParticipant(otherParticipants, newParticipant);
 
   // inform the participant about others
-  informNewParticipantAboutOthers(otherParticipants, participant);
+  informNewParticipantAboutOthers(otherParticipants, newParticipant);
 }
 
 export function informOthersAboutLeftParticipant(

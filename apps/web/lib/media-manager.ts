@@ -1,73 +1,89 @@
-let localStream: MediaStream | null;
-let screenStream: MediaStream | null;
-let originalVideoTrack: MediaStreamTrack | null;
+import { useMeeting } from "@/store/meeting";
+import { useMeetingMedia } from "@/store/meeting-media";
+
+let originalVideoTrack: MediaStreamTrack | null = null;
 
 export async function createLocalStream() {
-  if (!localStream) {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
+  const { localStream, setLocalStream } = useMeetingMedia.getState();
+  const { currentParticipant } = useMeeting.getState();
+
+  if (localStream) {
+    return localStream;
   }
 
-  if (!localStream) {
-    console.log("LocalStream is not available");
-    return;
-  }
-
-  originalVideoTrack = localStream.getVideoTracks()[0]!;
-
-  localStream.getTracks().forEach((track) => {
-    track.enabled = false;
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true,
   });
 
-  return localStream;
+  originalVideoTrack = stream.getVideoTracks()[0] ?? null;
+
+  const micEnabled = currentParticipant?.micOn ?? false;
+  const cameraEnabled = currentParticipant?.cameraOn ?? false;
+
+  stream.getAudioTracks().forEach((track) => {
+    track.enabled = micEnabled;
+  });
+
+  stream.getVideoTracks().forEach((track) => {
+    track.enabled = cameraEnabled;
+  });
+
+  setLocalStream(stream);
+
+  return stream;
 }
 
-export const getLocalStream = () => localStream;
-
-export const createScreenStream = async () => {
+export async function createScreenStream() {
   try {
-    screenStream = await navigator.mediaDevices.getDisplayMedia({
+    const { setScreenStream } = useMeetingMedia.getState();
+
+    const stream = await navigator.mediaDevices.getDisplayMedia({
       audio: true,
       video: true,
     });
 
-    if (!screenStream) {
-      console.log("No Screen Share Stream");
-      return;
-    }
+    setScreenStream(stream);
 
-    return screenStream;
+    return stream;
   } catch (error) {
-    console.log("Reject to share the screen");
+    console.error("Rejected screen sharing", error);
+    return null;
   }
-};
+}
 
-export const getScreenStream = () => {
-  if (!screenStream) {
-    console.log("No screen stream");
-    return;
-  }
+export function resetScreenStream() {
+  const { screenStream, setScreenStream } = useMeetingMedia.getState();
 
-  return screenStream;
-};
-
-export const resetScreenStream = () => {
   screenStream?.getTracks().forEach((track) => track.stop());
-  screenStream = null;
-};
 
-export const getOriginalVideoTrack = () => originalVideoTrack;
+  setScreenStream(null);
+}
 
-export const toggleMic = (micOn: boolean) => {
+export function getOriginalVideoTrack() {
+  return originalVideoTrack;
+}
+
+export function toggleMic(micOn: boolean) {
+  const { localStream } = useMeetingMedia.getState();
+
   localStream?.getAudioTracks().forEach((track) => {
     track.enabled = micOn;
   });
-};
+}
 
-export const toggleCamera = (cameraOn: boolean) => {
+export function toggleCamera(cameraOn: boolean) {
+  const { localStream } = useMeetingMedia.getState();
+
   localStream?.getVideoTracks().forEach((track) => {
     track.enabled = cameraOn;
   });
-};
+}
+
+export function stopLocalStream() {
+  const { localStream, setLocalStream } = useMeetingMedia.getState();
+
+  localStream?.getTracks().forEach((track) => track.stop());
+
+  setLocalStream(null);
+}

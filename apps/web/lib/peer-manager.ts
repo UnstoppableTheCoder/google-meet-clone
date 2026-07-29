@@ -2,14 +2,14 @@ import { useMeeting } from "@/store/meeting";
 import { getWSConnection } from "./socket-manager";
 import { labels, types } from "@repo/constants";
 import {
+  createLocalStream,
   createScreenStream,
-  getLocalStream,
   getOriginalVideoTrack,
-  getScreenStream,
   resetScreenStream,
 } from "./media-manager";
 import { useMeetingMedia } from "@/store/meeting-media";
 import { PeerConnections, RemoteStreams, RTPSenders } from "./types/lib.types";
+import { handleSendMediaOn } from "./media-on";
 
 const peerConnections: PeerConnections = {};
 const rtpSenders: RTPSenders = {};
@@ -27,26 +27,28 @@ const rtcConfig = {
   ],
 };
 
-export async function createPeerConnection(id: string) {
+export async function createPeerConnection1(id: string) {
   console.log("Message: Creating Peer Connection");
+
+  let { localStream, screenStream } = useMeetingMedia.getState();
+
   const pc = new RTCPeerConnection(rtcConfig);
   peerConnections[id] = pc;
 
-  const localStream = getLocalStream();
-
-  if (localStream) {
-    localStream?.getTracks().forEach((track) => {
-      rtpSenders[id] = {};
-      rtpSenders[id][track.kind as "audio" | "video"] = pc.addTrack(
-        track,
-        localStream,
-      );
-    });
+  if (!localStream) {
+    localStream = await createLocalStream();
   }
 
-  const screenStream = getScreenStream();
+  rtpSenders[id] = {};
+  localStream?.getTracks().forEach((track) => {
+    rtpSenders[id]![track.kind as "audio" | "video"] = pc.addTrack(
+      track,
+      localStream,
+    );
+  });
+
   if (screenStream) {
-    rtpSenders[id]?.video?.replaceTrack(screenStream.getTracks()[0]!);
+    await rtpSenders[id]?.video?.replaceTrack(screenStream.getTracks()[0]!);
   }
 
   pc.onnegotiationneeded = async () => {
@@ -60,7 +62,7 @@ export async function createPeerConnection(id: string) {
     }
 
     const offer = await pc.createOffer();
-    pc.setLocalDescription(offer);
+    await pc.setLocalDescription(offer);
 
     // send the offer to the other peer
     const message = {
@@ -103,6 +105,102 @@ export async function createPeerConnection(id: string) {
   return pc;
 }
 
+export async function createPeerConnection(id: string) {
+  console.log("Creating Peer Connection:", id);
+
+  let { localStream, screenStream } = useMeetingMedia.getState();
+
+  if (!localStream) {
+    localStream = await createLocalStream();
+  }
+
+  const pc = new RTCPeerConnection(rtcConfig);
+  peerConnections[id] = pc;
+
+  pc.onicecandidate = (event) => {
+    if (!event.candidate) return;
+
+    sendToSignalingServer(
+      JSON.stringify({
+        label: labels.WEBRTC_PROCESS,
+        data: {
+          type: types.SDP_PROCESS,
+          payload: {
+            type: "ice-candidate",
+            candidate: event.candidate,
+          },
+          to: id,
+        },
+      }),
+    );
+  };
+
+  pc.ontrack = (event) => {
+    const stream = event.streams[0];
+    if (!stream) return;
+
+    remoteStreams[id] = stream;
+    useMeetingMedia.getState().setRemoteStreamVersion();
+  };
+
+  pc.onnegotiationneeded = async () => {
+    try {
+      const currentParticipant = useMeeting.getState().currentParticipant;
+      const newlyJoinedParticipant =
+        useMeeting.getState().newlyJoinedParticipant;
+
+      if (!currentParticipant || !newlyJoinedParticipant) return;
+
+      if (currentParticipant.id === newlyJoinedParticipant.id) {
+        console.log("Skipping offer creation");
+        return;
+      }
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      sendToSignalingServer(
+        JSON.stringify({
+          label: labels.WEBRTC_PROCESS,
+          data: {
+            type: types.SDP_PROCESS,
+            payload: {
+              type: "offer",
+              offer: pc.localDescription,
+            },
+            to: id,
+          },
+        }),
+      );
+
+      console.log("Offer sent");
+    } catch (err) {
+      console.error("Negotiation failed:", err);
+    }
+  };
+
+  rtpSenders[id] = {};
+
+  // Add tracks
+  for (const track of localStream.getTracks()) {
+    rtpSenders[id][track.kind as "audio" | "video"] = pc.addTrack(
+      track,
+      localStream,
+    );
+  }
+
+  // Replace with screen share if active
+  if (screenStream) {
+    const screenTrack = screenStream.getVideoTracks()[0];
+    if (screenTrack) {
+      await rtpSenders[id].video?.replaceTrack(screenTrack);
+    }
+  }
+
+  console.log("RTP SENDERS: ", rtpSenders);
+  return pc;
+}
+
 export function getPeerConnection(id: string) {
   return peerConnections[id];
 }
@@ -112,10 +210,11 @@ export function getRemoteStream(id: string) {
 }
 
 export function handleScreenShare(screenShare: boolean) {
+  console.log("screen share: ", screenShare);
   if (screenShare) {
-    startSharingScreen(screenShare);
+    startSharingScreen();
   } else {
-    stopSharingScreen(screenShare);
+    stopSharingScreen();
   }
 }
 
@@ -124,7 +223,9 @@ export function sendToSignalingServer(message: string) {
   ws.send(message);
 }
 
-async function startSharingScreen(screenShare: boolean) {
+async function startSharingScreen() {
+  console.log("SCREEN SHARE RTP Senders: ", rtpSenders);
+
   const screenStream = await createScreenStream();
   if (!screenStream) return;
 
@@ -132,28 +233,31 @@ async function startSharingScreen(screenShare: boolean) {
   if (!screenTrack) return;
 
   for (const senderInfo of Object.values(rtpSenders)) {
-    senderInfo.video?.replaceTrack(screenTrack);
+    await senderInfo.video?.replaceTrack(screenTrack);
   }
 
   screenTrack.onended = () => {
-    stopSharingScreen(screenShare);
+    stopSharingScreen();
   };
 
   // Change the state
-  useMeetingMedia.getState().setScreenShare(screenShare);
+  useMeetingMedia.getState().setScreenShare(true);
 }
 
-function stopSharingScreen(screenShare: boolean) {
+async function stopSharingScreen() {
+  const currentParticipant = useMeeting.getState().currentParticipant;
+  if (!currentParticipant) return;
+
   const originalVideoTrack = getOriginalVideoTrack();
 
   for (const senderInfo of Object.values(rtpSenders)) {
-    senderInfo.video?.replaceTrack(originalVideoTrack);
+    await senderInfo.video?.replaceTrack(originalVideoTrack);
   }
 
   resetScreenStream();
 
   // Change the state
-  useMeetingMedia.getState().setScreenShare(!screenShare);
+  useMeetingMedia.getState().setScreenShare(false);
 }
 
 export function handleIsRecording(isRecording: boolean) {

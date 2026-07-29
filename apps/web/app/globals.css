@@ -1,5 +1,1 @@
 @import "tailwindcss";
-
-.no-scrollbar {
-  scrollbar-width: none;
-}

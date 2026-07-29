@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { Actions, State } from "./types/meeting.types";
-import { Participant } from "@repo/types";
+import { Participant, MediaOnPayload } from "@repo/types";
 import { ActivePanel } from "@/types/meeting.types";
 import { devtools } from "zustand/middleware";
 
@@ -15,6 +15,7 @@ export const useMeeting = create<State & Actions>()(
     openModal: false,
     activePanel: "none",
     isEnded: false,
+    pinnedId: null,
 
     setCurrentParticipant: (currentParticipant: Participant) =>
       set({ currentParticipant }),
@@ -22,9 +23,20 @@ export const useMeeting = create<State & Actions>()(
     setHost: (host: Participant) => set({ currentParticipant: host }),
 
     setOtherParticipants: (otherParticipants: Participant[]) =>
-      set((state) => ({
-        otherParticipants: [...state.otherParticipants, ...otherParticipants],
-      })),
+      set((state) => {
+        const existingIds = new Set(
+          state.otherParticipants.map((participant) => participant.id),
+        );
+
+        return {
+          otherParticipants: [
+            ...state.otherParticipants,
+            ...otherParticipants.filter(
+              (participant) => !existingIds.has(participant.id),
+            ),
+          ],
+        };
+      }),
 
     resetOtherParticipants: () => set({ otherParticipants: [] }),
 
@@ -73,25 +85,36 @@ export const useMeeting = create<State & Actions>()(
 
     setActivePanel: (activePanel: ActivePanel) => set({ activePanel }),
 
-    setOtherParticipantCamera: (cameraOn: boolean, participantId: string) =>
+    setOtherParticipantLocalCamera: (
+      cameraOn: boolean,
+      participantId: string,
+    ) =>
       set((state) => ({
         otherParticipants: state.otherParticipants.map((participant) =>
           participant.id === participantId
-            ? { ...participant, cameraOn }
+            ? {
+                ...participant,
+                localSettings: { ...participant.localSettings, cameraOn },
+              }
             : participant,
         ),
       })),
 
-    setOtherParticipantMic: (micOn: boolean, participantId: string) =>
-      set((state) => ({
-        otherParticipants: state.otherParticipants.map((participant) =>
-          participant.id === participantId
-            ? { ...participant, micOn }
-            : participant,
-        ),
-      })),
+    setOtherParticipantLocalMic: (micOn: boolean, participantId: string) =>
+      set((state) => {
+        return {
+          otherParticipants: state.otherParticipants.map((participant) =>
+            participant.id === participantId
+              ? {
+                  ...participant,
+                  localSettings: { ...participant.localSettings, micOn },
+                }
+              : participant,
+          ),
+        };
+      }),
 
-    setOtherParticipantHandRaise: (handRaise: boolean, handRaiserId: string) =>
+    setOtherParticipantHandRaise: (handRaised: boolean, handRaiserId: string) =>
       set((state) => {
         const otherParticipants = state.otherParticipants;
 
@@ -100,17 +123,35 @@ export const useMeeting = create<State & Actions>()(
         );
         if (!participant) return { otherParticipants };
 
-        participant.handRaise = handRaise;
+        participant.handRaised = handRaised;
 
         return { otherParticipants: [...otherParticipants] };
       }),
+
+    setOtherParticipantRemoteMediaOn: ({
+      micOn,
+      cameraOn,
+      participantId,
+      meetingId,
+    }: MediaOnPayload) =>
+      set((state) => ({
+        otherParticipants: state.otherParticipants.map((participant) =>
+          participant.id === participantId
+            ? { ...participant, micOn, cameraOn }
+            : participant,
+        ),
+      })),
 
     setCurrentParticipantCamera: (cameraOn: boolean) =>
       set((state) => {
         const currentParticipant = state.currentParticipant;
 
         return {
-          currentParticipant: { ...currentParticipant!, cameraOn },
+          currentParticipant: {
+            ...currentParticipant!,
+            cameraOn,
+            localSettings: { ...currentParticipant?.localSettings, cameraOn },
+          },
         };
       }),
 
@@ -119,7 +160,11 @@ export const useMeeting = create<State & Actions>()(
         const currentParticipant = state.currentParticipant;
 
         return {
-          currentParticipant: { ...currentParticipant!, micOn },
+          currentParticipant: {
+            ...currentParticipant!,
+            micOn,
+            localSettings: { ...currentParticipant?.localSettings, micOn },
+          },
         };
       }),
 
@@ -133,6 +178,8 @@ export const useMeeting = create<State & Actions>()(
       }),
 
     setIsEnded: (isEnded: boolean) => set({ isEnded }),
+
+    setPinnedId: (pinnedId: string | null) => set({ pinnedId }),
 
     resetMeeting: () => {
       set({

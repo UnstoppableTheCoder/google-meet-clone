@@ -1,33 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { MouseEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMeeting } from "@/store/meeting";
-import { useSession } from "@/lib/auth-client";
+import VideoSection from "./components/video/video-section";
+import Panels from "./components/panels/panels";
 import { closeWsConnection, setWsConnection } from "@/lib/socket-manager";
 import { signaling } from "@/lib/signaling";
 import useMeetingContext from "./context/use-meeting-context";
+import { toast } from "sonner";
+import { useSession } from "@/lib/auth-client";
 import { saveMeetingHistory } from "./action";
-import MeetingHeader from "./components/meeting-header";
-import VideoGrid from "./components/video-grid";
-import ReactionsOverlay from "./components/reactions-overlay";
-import Filmstrip from "./components/filmstrip";
-import ChatPanel from "./components/chat-panel";
-import ParticipantsPanel from "./components/participant-panel";
-import ControlBar from "./components/control-bar";
-import { Card, CardContent } from "@repo/ui/components/card";
 import { Loader } from "lucide-react";
+import { cn } from "@repo/ui/lib/utils";
+import { Card, CardContent } from "@repo/ui/components/card";
+// import { saveMeetingHistory } from "./action";
 
 export default function MeetingPage() {
   const { meetingId } = useParams<{ meetingId: string }>();
   const context = useMeetingContext();
 
-  const videoRefs = useRef<Record<string, Set<HTMLVideoElement>>>({});
-
   const setCurrentParticipant = useMeeting(
     (state) => state.setCurrentParticipant,
   );
+  const setActivePanel = useMeeting((state) => state.setActivePanel);
   const leftParticipant = useMeeting((state) => state.leftParticipant);
   const newlyJoinedParticipant = useMeeting(
     (state) => state.newlyJoinedParticipant,
@@ -35,36 +31,20 @@ export default function MeetingPage() {
   const setLeftParticipant = useMeeting((state) => state.setLeftParticipant);
   const joiningParticipants = useMeeting((state) => state.joiningParticipants);
   const currentParticipant = useMeeting((state) => state.currentParticipant);
-  const otherParticipants = useMeeting((state) => state.otherParticipants);
-  const pinnedId = useMeeting((state) => state.pinnedId);
-
-  const participants =
-    currentParticipant || otherParticipants.length > 0
-      ? [
-          { ...currentParticipant, isSelf: true },
-          ...otherParticipants.map((p) => ({ ...p, isSelf: false })),
-        ]
-      : [];
-
   const isEnded = useMeeting((state) => state.isEnded);
-
   const { data } = useSession();
   const user = data?.user;
-  const userId = data?.user?.id;
-  const username = data?.user?.name;
-  const avatar = data?.user?.image;
-  const token = data?.session?.token;
-  const [renderPermissionMessage, setRenderPermissionMessage] = useState(false);
+  const [renderPermissionMessage, setRenderPermission] = useState(false);
 
   // Initialize
   useEffect(() => {
     if (!context) return;
     const { wsRef } = context;
-    // if (wsRef.current) return;
 
     const username = user?.name;
-    const avatar = user?.image;
+    const image = user?.image;
     const sessionToken = data?.session.token;
+    // const meetingTitle = prompt("Enter the meeting Title");
     const meetingTitle = "Google Meet";
     const userId = user?.id;
 
@@ -73,7 +53,7 @@ export default function MeetingPage() {
       !meetingTitle ||
       !meetingId ||
       !userId ||
-      !avatar ||
+      !image ||
       !sessionToken
     ) {
       console.log("All the fields are required");
@@ -84,14 +64,11 @@ export default function MeetingPage() {
     setCurrentParticipant({
       id: userId,
       username,
-      avatar,
+      image,
       meetingId,
       meetingTitle,
       hasJoinedMeeting: false,
       isHost: false,
-      micOn: false,
-      cameraOn: false,
-      handRaised: false,
     });
 
     // Save Meeting History
@@ -114,7 +91,7 @@ export default function MeetingPage() {
     return () => {
       closeWsConnection();
     };
-  }, [userId, token, meetingId]);
+  }, [data]);
 
   // leftParticipant
   useEffect(() => {
@@ -144,12 +121,12 @@ export default function MeetingPage() {
   }, [joiningParticipants]);
 
   useEffect(() => {
-    setTimeout(() => setRenderPermissionMessage(true), 500);
+    setTimeout(() => setRenderPermission(true), 500);
   }, []);
 
   useEffect(() => {
     if (currentParticipant?.hasJoinedMeeting) {
-      setRenderPermissionMessage(false);
+      setRenderPermission(false);
     }
   }, [currentParticipant]);
 
@@ -159,60 +136,43 @@ export default function MeetingPage() {
     }
   }, [isEnded]);
 
-  const registerVideoRef = (
-    participantId: string,
-    element: HTMLVideoElement,
-  ) => {
-    if (!videoRefs.current[participantId]) {
-      videoRefs.current[participantId] = new Set();
+  // Handle Chat & Participant buttons clicks
+  const handleClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (!context) return;
+    const {
+      panelsRef,
+      topBarChatBtnRef,
+      topBarParticipantBtnRef,
+      bottomBarChatBtnRef,
+      bottomBarParticipantBtnRef,
+    } = context;
+
+    const target = e.target as Node;
+    const panelsClicked = panelsRef.current?.contains(target);
+    const topBarChatBtnClicked = topBarChatBtnRef.current?.contains(target);
+    const topBarParticipantBtnClicked =
+      topBarParticipantBtnRef.current?.contains(target);
+    const bottomBarChatBtnClicked =
+      bottomBarChatBtnRef.current?.contains(target);
+    const bottomBarParticipantBtnClicked =
+      bottomBarParticipantBtnRef.current?.contains(target);
+
+    if (
+      !panelsClicked &&
+      !topBarChatBtnClicked &&
+      !topBarParticipantBtnClicked &&
+      !bottomBarChatBtnClicked &&
+      !bottomBarParticipantBtnClicked
+    ) {
+      setActivePanel("none");
     }
-
-    videoRefs.current[participantId].add(element);
-  };
-
-  const unregisterVideoRef = (
-    participantId: string,
-    element: HTMLVideoElement,
-  ) => {
-    const refs = videoRefs.current[participantId];
-    if (!refs) return;
-
-    refs.delete(element);
-
-    if (refs.size === 0) {
-      delete videoRefs.current[participantId];
-    }
-  };
-
-  const [reactions, setReactions] = useState<any[]>([]);
-  const [screenSharing, setScreenSharing] = useState(false);
-  const [showFilmstrip, setShowFilmstrip] = useState(true);
-
-  const pinned = useMemo(
-    () => participants.find((p) => p.id === pinnedId) || null,
-    [participants, pinnedId],
-  );
-
-  const sendReaction = (emoji: string) => {
-    const id = `r-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    const left = 30 + Math.random() * 40;
-    setReactions((prev) => [...prev, { id, emoji, left }]);
-    setTimeout(
-      () => setReactions((prev) => prev.filter((r) => r.id !== id)),
-      2700,
-    );
   };
 
   return (
     <div
-      data-testid="meeting-page"
-      className="relative h-screen w-full flex flex-col overflow-hidden bg-[hsl(var(--meet-bg))] text-foreground"
+      className="relative flex h-screen overflow-hidden bg-background"
+      onClick={handleClick}
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[420px] w-[420px] rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-fuchsia-500/10 blur-3xl" />
-      </div>
-
       {renderPermissionMessage && !currentParticipant?.hasJoinedMeeting && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md">
           <Card className="w-full max-w-lg rounded-3xl border border-border bg-card shadow-2xl">
@@ -236,41 +196,8 @@ export default function MeetingPage() {
         </div>
       )}
 
-      <MeetingHeader
-        theme={"dark"}
-        onToggleTheme={() => {
-          console.log("Theme toggled");
-        }}
-        participantCount={participants.length}
-        showFilmstrip={showFilmstrip}
-        onToggleFilmstrip={() => setShowFilmstrip((v) => !v)}
-      />
-
-      <div className="relative z-10 flex flex-1 min-h-0">
-        <main className="relative flex-1 min-w-0 flex flex-col">
-          <VideoGrid
-            participants={participants}
-            pinned={pinned}
-            screenSharing={screenSharing}
-            videoRefs={videoRefs}
-            registerVideoRef={registerVideoRef}
-            unregisterVideoRef={unregisterVideoRef}
-          />
-          <ReactionsOverlay reactions={reactions} />
-          {showFilmstrip && (
-            <Filmstrip
-              participants={participants}
-              registerVideoRef={registerVideoRef}
-              unregisterVideoRef={unregisterVideoRef}
-            />
-          )}
-        </main>
-
-        <ChatPanel />
-        <ParticipantsPanel />
-      </div>
-
-      <ControlBar />
+      <VideoSection />
+      <Panels />
     </div>
   );
 }
