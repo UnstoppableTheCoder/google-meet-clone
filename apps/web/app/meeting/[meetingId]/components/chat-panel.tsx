@@ -7,6 +7,7 @@ import { useChat } from "@/store/chat";
 import { getChats } from "./panels/chats/message/action";
 import ChatMessage from "./panels/chats/message/chat-message";
 import ChatInput from "./panels/chats/input/chat-input";
+import { cn } from "@repo/ui/lib/utils";
 
 export default function ChatPanel() {
   const activePanel = useMeeting((s) => s.activePanel);
@@ -21,7 +22,6 @@ export default function ChatPanel() {
     getChats(currentParticipant.meetingId, currentParticipant.id)
       .then((res) => {
         if (res.success) setChats(res.chats);
-        console.log(res.message);
       })
       .catch((e) => console.log("Error: ", e));
   }, [currentParticipant, setChats]);
@@ -32,7 +32,7 @@ export default function ChatPanel() {
     }
   }, [chats]);
 
-  if (activePanel !== "chats" || !currentParticipant) return null;
+  if (!currentParticipant) return null;
 
   return (
     <motion.aside
@@ -41,9 +41,13 @@ export default function ChatPanel() {
       exit={{ x: 40, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
       data-testid="chat-panel"
-      className="fixed right-0 bottom-0 top-[72px] z-30 w-[320px] lg:w-[380px] shrink-0
+      className={cn(
+        `fixed right-0 bottom-0 top-[72px] z-30 shrink-0
                  border-l border-white/5 bg-[#111317]/95 backdrop-blur-xl
-                 flex flex-col shadow-2xl shadow-black/40"
+                 flex flex-col shadow-2xl shadow-black/40`,
+        activePanel !== "chats" && "hidden",
+        "w-full xs:w-[400px] sm:w-[430px] max-w-[100vw]",
+      )}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0">

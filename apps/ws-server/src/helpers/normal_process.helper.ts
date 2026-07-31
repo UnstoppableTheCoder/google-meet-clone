@@ -36,13 +36,11 @@ export function handleAskToConnect({
 
   const isAlreadyParticipant = meeting.participants.some((p) => p.id === id);
   if (isAlreadyParticipant) {
-    console.log("Already participant");
     handleIsAlreadyParticipant(newParticipant, meeting);
     return;
   }
 
   if (!meeting.host) {
-    console.log("Is Host");
     newParticipant.isHost = true;
     meeting.host = newParticipant;
     meeting.participants.push(newParticipant);
@@ -157,8 +155,6 @@ export function handleSendMessage(payload: ChatPayload) {
 }
 
 export function handleHandRaise(payload: HandRaisePayload) {
-  console.log("Event: HandRaise");
-
   const { handRaiserId, meetingId } = payload;
 
   const meeting = meetings[meetingId];

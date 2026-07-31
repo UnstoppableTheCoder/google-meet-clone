@@ -88,7 +88,6 @@ export default function ChatInputContainer({
     );
 
     const res = await saveChatToDB(chatPayload);
-    console.log(res.message);
 
     setChatMessage("");
     setFiles([]);

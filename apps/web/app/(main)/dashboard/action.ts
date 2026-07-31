@@ -20,7 +20,6 @@ export const getRecentMeetings = async (userId: string) => {
       ])
       .toArray();
 
-    console.log("History: ", meetingsHistory);
     return {
       success: true,
       message: "Meetings History fetched successfully",

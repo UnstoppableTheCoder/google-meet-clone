@@ -197,7 +197,6 @@ export async function createPeerConnection(id: string) {
     }
   }
 
-  console.log("RTP SENDERS: ", rtpSenders);
   return pc;
 }
 
@@ -210,7 +209,6 @@ export function getRemoteStream(id: string) {
 }
 
 export function handleScreenShare(screenShare: boolean) {
-  console.log("screen share: ", screenShare);
   if (screenShare) {
     startSharingScreen();
   } else {
@@ -224,8 +222,6 @@ export function sendToSignalingServer(message: string) {
 }
 
 async function startSharingScreen() {
-  console.log("SCREEN SHARE RTP Senders: ", rtpSenders);
-
   const screenStream = await createScreenStream();
   if (!screenStream) return;
 

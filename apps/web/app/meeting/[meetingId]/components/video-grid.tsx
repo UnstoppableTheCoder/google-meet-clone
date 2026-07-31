@@ -57,7 +57,6 @@ export default function VideoGrid({
     if (!currentParticipant || !localStream) return;
 
     const elements = videoRefs.current[currentParticipant.id];
-    console.log("Local Elements : ", elements);
     if (!elements) return;
 
     elements.forEach((video: HTMLVideoElement) => {

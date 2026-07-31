@@ -19,7 +19,6 @@ export default function RecentMeetings() {
 
   useEffect(() => {
     if (user) {
-      console.log("Fetching the meeting history");
       getRecentMeetings(user.id)
         .then((res) => {
           setRecentMeetings(res.meetingsHistory);

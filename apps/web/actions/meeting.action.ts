@@ -7,7 +7,6 @@ export const saveEndMeetingHistory = async (
   isHost: boolean,
   meetingId: string,
 ) => {
-  console.log("Is host: ", isHost);
   try {
     const meetings = await meetingsCollection();
     await meetings.findOneAndUpdate(

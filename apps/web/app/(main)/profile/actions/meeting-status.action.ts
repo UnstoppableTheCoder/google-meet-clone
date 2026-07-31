@@ -3,8 +3,6 @@
 import { meetingsCollection } from "@repo/db";
 
 export const getMeetingsStatus = async (userId: string) => {
-  console.log("Getting meetings Status");
-
   try {
     const meetings = await meetingsCollection();
     const meetingsList = await meetings.find({ userId }).toArray();

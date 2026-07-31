@@ -30,8 +30,6 @@ export default function SignupForm() {
   });
 
   const onSubmit: SubmitHandler<SignupSchema> = async (payload) => {
-    console.log("Env: ", process.env.NEXT_PUBLIC_UPLOADS_BASE_URL);
-
     const { data, error } = await signUp.email(
       {
         ...payload,

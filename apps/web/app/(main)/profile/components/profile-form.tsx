@@ -37,8 +37,6 @@ export default function ProfileForm({
 
   const onSubmit = async (payload: ProfileSchema) => {
     const file = payload.file;
-    console.log(file);
-
     const formData = new FormData();
 
     if (file) {

@@ -34,6 +34,7 @@ export default function ChatFiles({
           return { ...file, url };
         }),
       );
+
       if (!cancelled) {
         setChatFiles(results);
         setLoading(false);

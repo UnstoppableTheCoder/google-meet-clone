@@ -75,11 +75,6 @@ export default function ParticipantTile({
     previousVideoRef.current = element;
   };
 
-  console.log({
-    first: participant.localSettings?.cameraOn && participant.cameraOn,
-    second: screenShare && participant.id === currentParticipant?.id,
-  });
-
   const isLocal = participant.id === currentParticipant?.id;
 
   const shouldShowVideo = isLocal
