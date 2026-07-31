@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Mic,
   MicOff,
@@ -30,10 +30,11 @@ import { useMeeting } from "@/store/meeting";
 import { useMeetingMedia } from "@/store/meeting-media";
 import { toggleCamera, toggleMic } from "@/lib/media-manager";
 import { handleIsRecording, handleScreenShare } from "@/lib/peer-manager";
-import { handleSendHandRaise } from "@/lib/hand-raise";
 import Image from "next/image";
 import { handleSendMediaOn } from "@/lib/media-on";
 import EndMeetingModal from "./video/end-meeting-modal";
+import { handleSendHandRaise } from "@/lib/hand-raise";
+import { emoji } from "better-auth";
 
 function CtrlBtn({ active, danger, onClick, label, children, testid }: any) {
   return (
@@ -70,7 +71,11 @@ type OptionsType =
   | "participants"
   | "end-meeting";
 
-export default function ControlBar() {
+export default function ControlBar({
+  sendReaction,
+}: {
+  sendReaction: (emoji: string) => void;
+}) {
   // const context = useMeetingContext();
   const [endMeetingOpen, setEndMeetingOpen] = useState(false);
   const setActivePanel = useMeeting((state) => state.setActivePanel);
@@ -89,6 +94,7 @@ export default function ControlBar() {
   const setMicOn = useMeeting((state) => state.setCurrentParticipantMic);
   const cameraOn = currentParticipant?.cameraOn ?? false;
   const micOn = currentParticipant?.micOn ?? false;
+  const handRaised = currentParticipant?.handRaised ?? false;
 
   useEffect(() => {
     toggleCamera(cameraOn);
@@ -137,7 +143,7 @@ export default function ControlBar() {
       }
 
       case "hand-raise": {
-        const newState = !currentParticipant.handRaised;
+        const newState = !handRaised;
         setCurrentParticipantHandRaise(newState);
         handleSendHandRaise(
           newState,
@@ -221,49 +227,43 @@ export default function ControlBar() {
             <CtrlBtn
               testid="recording-btn"
               onClick={() => handleClick("is-recording")}
+              label={isRecording ? "Stop Recording" : "Start Recording"}
+              active={isRecording}
             >
               <Image
                 src={isRecording ? "/recording-on.png" : "/recording-off.png"}
                 alt="Recording"
-                width={22}
-                height={22}
+                width={27}
+                height={27}
               />
             </CtrlBtn>
 
             {/* HAND RAISE */}
             <CtrlBtn
               testid="hand-raise-btn"
-              // active={handRaised}
-              // onClick={onToggleHand}
-              // label={handRaised ? "Lower hand" : "Raise hand"}
+              active={handRaised}
+              onClick={() => handleClick("hand-raise")}
+              label={handRaised ? "Lower hand" : "Raise hand"}
             >
               <Hand className="w-4 h-4 md:w-5 md:h-5" />
             </CtrlBtn>
 
-            <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-              <PopoverTrigger asChild>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      data-testid="reactions-btn"
-                      aria-label="Send a reaction"
-                      className={cn(
-                        "cursor-pointer h-11 w-11 md:h-12 md:w-12 rounded-full flex items-center justify-center transition-all active:scale-95 border text-foreground",
-                        emojiOpen
-                          ? "bg-gray-800"
-                          : "bg-[#181A20] hover:bg-[#1e2027]",
-                      )}
-                    >
-                      <Smile className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">{"Emojis"}</TooltipContent>
-                </Tooltip>
-              </PopoverTrigger>
+            {/* REACTIONS */}
+            <Popover open={emojiOpen}>
+              <CtrlBtn
+                active={emojiOpen}
+                label={"Emoji"}
+                onClick={() => setEmojiOpen(!emojiOpen)}
+              >
+                <PopoverTrigger asChild>
+                  <Smile className="w-4 h-4 md:w-5 md:h-5" />
+                </PopoverTrigger>
+              </CtrlBtn>
+
               <PopoverContent
                 side="top"
                 align="center"
-                className="p-2 w-auto rounded-full border-border"
+                className="p-2 mb-5 w-auto rounded-full border-border"
               >
                 <div className="flex items-center gap-1">
                   {REACTIONS.map((r) => (
@@ -271,7 +271,6 @@ export default function ControlBar() {
                       key={r}
                       data-testid={`reaction-${r}`}
                       onClick={() => {
-                        // onReact(r);
                         setEmojiOpen(false);
                       }}
                       className="h-10 w-10 rounded-full hover:bg-secondary text-xl transition-transform hover:scale-125"
@@ -286,6 +285,7 @@ export default function ControlBar() {
 
             <div className="w-px h-6 bg-border/70 mx-0.5" />
 
+            {/* CHATS */}
             <CtrlBtn
               testid="open-chat-btn"
               active={activePanel === "chats"}
@@ -295,6 +295,7 @@ export default function ControlBar() {
               <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
             </CtrlBtn>
 
+            {/* PARTICIPANTS */}
             <CtrlBtn
               testid="open-people-btn"
               active={activePanel === "participants"}
@@ -310,6 +311,7 @@ export default function ControlBar() {
 
             <div className="w-px h-6 bg-border/70 mx-0.5" />
 
+            {/* LEAVE */}
             <Button
               data-testid="leave-call-btn"
               onClick={() => handleClick("end-meeting")}

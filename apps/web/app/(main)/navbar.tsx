@@ -34,6 +34,13 @@ export default function Navbar() {
           >
             Dashboard
           </Link>
+
+          <Link
+            href="/profile"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            Profile
+          </Link>
         </nav>
 
         {/* Profile */}

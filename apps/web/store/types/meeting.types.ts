@@ -34,13 +34,13 @@ export interface Actions {
   ) => void;
   setOtherParticipantLocalMic: (micOn: boolean, participantId: string) => void;
   setOtherParticipantHandRaise: (
-    handRaise: boolean,
+    handRaised: boolean,
     handRaiserId: string,
   ) => void;
   setOtherParticipantRemoteMediaOn: (payload: MediaOnPayload) => void;
   setCurrentParticipantCamera: (cameraOn: boolean) => void;
   setCurrentParticipantMic: (micOn: boolean) => void;
-  setCurrentParticipantHandRaise: (handRaise: boolean) => void;
+  setCurrentParticipantHandRaise: (handRaised: boolean) => void;
   setIsEnded: (isEnded: boolean) => void;
   setPinnedId: (isPinnedId: string | null) => void;
   resetMeeting: () => void;

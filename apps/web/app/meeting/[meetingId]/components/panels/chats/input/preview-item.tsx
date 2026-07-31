@@ -1,5 +1,15 @@
 import { FileType } from "@repo/types";
+import { FileText, FileArchive, FileQuestion } from "lucide-react";
 import React from "react";
+
+function Placeholder({ label, icon: Icon }: { label: string; icon: any }) {
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-white/70 text-sm">
+      <Icon className="w-8 h-8" />
+      <span>{label}</span>
+    </div>
+  );
+}
 
 export default function PreviewItem({
   fileName,
@@ -11,60 +21,28 @@ export default function PreviewItem({
   fileUrl: string;
 }) {
   switch (fileType) {
-    case "application/pdf":
-      return (
-        <div className="h-full w-full bg-gray-500 flex justify-center items-center text-white text-bold text-2xl rounded-lg">
-          No PDF Preview Available
-        </div>
-      );
-
     case "image/png":
-      return (
-        <div className="h-full w-full flex items-center justify-center">
-          <img src={fileUrl} alt="Preview Image" className="h-full" />
-        </div>
-      );
-
     case "image/jpeg":
-      return (
-        <div className="h-full w-full flex items-center justify-center">
-          <img src={fileUrl} alt="Preview Image" className="h-full" />
-        </div>
-      );
-
     case "image/svg+xml":
       return (
-        <div className="h-full w-full flex items-center justify-center">
-          <img src={fileUrl} alt="Preview Image" className="h-full" />
-        </div>
+        <img
+          src={fileUrl}
+          alt={fileName}
+          className="h-full w-full object-contain"
+        />
       );
 
     case "video/mp4":
-      return (
-        <div className="h-full w-full flex items-center">
-          <video src={fileUrl} controls></video>
-        </div>
-      );
-
     case "video/webm":
-      return (
-        <div className="h-full w-full flex items-center">
-          <video src={fileUrl} controls></video>
-        </div>
-      );
+      return <video src={fileUrl} controls className="h-full w-full" />;
+
+    case "application/pdf":
+      return <Placeholder label="PDF preview unavailable" icon={FileText} />;
 
     case "application/zip":
-      return (
-        <div className="h-full w-full bg-gray-500 flex justify-center items-center text-white text-bold text-2xl rounded-lg">
-          No ZIP Preview Available
-        </div>
-      );
+      return <Placeholder label="ZIP preview unavailable" icon={FileArchive} />;
 
     default:
-      return (
-        <div className="h-full w-full bg-gray-500 flex justify-center items-center text-white text-bold text-2xl rounded-lg">
-          No Preview Available
-        </div>
-      );
+      return <Placeholder label="No preview" icon={FileQuestion} />;
   }
 }

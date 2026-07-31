@@ -1,3 +1,14 @@
+import React, {
+  ChangeEvent,
+  Dispatch,
+  KeyboardEvent,
+  SetStateAction,
+  useRef,
+  useState,
+} from "react";
+import { Loader, Paperclip, Send, ChevronDown } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+
 import { getWSConnection } from "@/lib/socket-manager";
 import { useChat } from "@/store/chat";
 import { useMeeting } from "@/store/meeting";
@@ -6,15 +17,6 @@ import { labels, types } from "@repo/constants";
 import { File } from "@repo/types";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
-import { Loader, Paperclip, Send } from "lucide-react";
-import React, {
-  ChangeEvent,
-  Dispatch,
-  KeyboardEvent,
-  SetStateAction,
-  useState,
-} from "react";
-import { v4 as uuidv4 } from "uuid";
 import { saveChatToDB } from "./action";
 
 export default function ChatInputContainer({
@@ -26,63 +28,46 @@ export default function ChatInputContainer({
 }) {
   const [chatMessage, setChatMessage] = useState("");
   const [sendTo, setSendTo] = useState("everyone");
-
-  const currentParticipant = useMeeting((state) => state.currentParticipant);
-  const otherParticipants = useMeeting((state) => state.otherParticipants);
-  const setChat = useChat((state) => state.setChat);
   const [uploading, setUploading] = useState(false);
 
+  const currentParticipant = useMeeting((s) => s.currentParticipant);
+  const otherParticipants = useMeeting((s) => s.otherParticipants);
+  const setChat = useChat((s) => s.setChat);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files;
+    if (!selected || selected.length === 0) return;
+
     setUploading(true);
+    try {
+      for (const file of Array.from(selected)) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-    const files = e.target.files;
-    if (!files) return;
-
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
         const response = await fetch("/api/generate-upload-url", {
           method: "POST",
           body: formData,
         });
-
         const { uploadUrl, fileName, fileType } = await response.json();
 
-        console.log("Upload URL: ", uploadUrl);
-
-        // Uploading to the s3
-        fetch(uploadUrl, {
-          method: "PUT",
-          body: file,
-        });
+        fetch(uploadUrl, { method: "PUT", body: file });
 
         const fileUrl = URL.createObjectURL(file);
-        setFiles((prevFiles) => [
-          ...prevFiles,
-          { fileName, fileType, fileUrl },
-        ]);
-
-        setTimeout(() => {
-          setUploading(false);
-        }, 1000);
-      } catch (error) {
-        console.log("Error generating upload url: ", error);
+        setFiles((prev) => [...prev, { fileName, fileType, fileUrl }]);
       }
+    } catch (error) {
+      console.log("Error generating upload url: ", error);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-
-    console.log("Files uploaded to s3 successfully");
-  };
-
-  const handleMessageInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setChatMessage(e.target.value);
   };
 
   const handleSend = async () => {
-    if (!currentParticipant) return;
-    if (uploading) return;
-    if (!chatMessage && files.length === 0) return;
+    if (!currentParticipant || uploading) return;
+    if (!chatMessage.trim() && files.length === 0) return;
 
     const chatPayload = {
       _id: uuidv4(),
@@ -95,16 +80,12 @@ export default function ChatInputContainer({
 
     setChat(chatPayload);
 
-    const message = {
-      label: labels.NORMAL_PROCESS,
-      data: {
-        type: types.SEND_MESSAGE,
-        payload: chatPayload,
-      },
-    };
-
-    const ws = getWSConnection();
-    ws.send(JSON.stringify(message));
+    getWSConnection().send(
+      JSON.stringify({
+        label: labels.NORMAL_PROCESS,
+        data: { type: types.SEND_MESSAGE, payload: chatPayload },
+      }),
+    );
 
     const res = await saveChatToDB(chatPayload);
     console.log(res.message);
@@ -115,63 +96,72 @@ export default function ChatInputContainer({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSend();
     }
   };
 
-  const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSendTo(e.target.value);
-  };
-
   return (
-    <div className="w-full flex flex-col">
-      {/* Send To */}
-      <select
-        defaultValue={sendTo}
-        value={sendTo}
-        className="select w-[90%] mx-auto"
-        onChange={handleSelectChange}
-      >
-        <option disabled={true}>Send to</option>
-        <option value={"everyone"}>Everyone</option>
-        {otherParticipants.map((p) => (
-          <option key={p.id} value={p.id}>
-            {capitalizeName(p.username)}
+    <div className="w-full flex flex-col gap-2 p-3">
+      {/* Send-to selector */}
+      <div className="relative">
+        <select
+          value={sendTo}
+          onChange={(e) => setSendTo(e.target.value)}
+          style={{ colorScheme: "dark" }}
+          className="w-full appearance-none bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs rounded-full pl-3 pr-8 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+        >
+          <option value="everyone" className="bg-[#1a1d23] text-white">
+            Send to Everyone
           </option>
-        ))}
-      </select>
+          {otherParticipants.map((p) => (
+            <option key={p.id} value={p.id} className="bg-[#1a1d23] text-white">
+              Send to {capitalizeName(p.username)}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-white/50 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
 
-      <div className="p-3 w-full border-base-300 flex items-center gap-2">
-        {/* File Upload */}
-        <label className="cursor-pointer">
-          <input type="file" className="hidden" />
-          <label htmlFor="file-input">
-            <div className="bg-white rounded-md text-black p-2 cursor-pointer">
-              <Paperclip size={16} />
-            </div>
-          </label>
-          <input
-            type="file"
-            multiple
-            id="file-input"
-            className="hidden"
-            onChange={handleFileInputChange}
-          />
+      {/* Input row */}
+      <div className="flex items-center gap-2">
+        <label
+          htmlFor="chat-file-input"
+          className="h-10 w-10 shrink-0 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 flex items-center justify-center cursor-pointer transition-colors"
+          aria-label="Attach file"
+        >
+          <Paperclip size={16} />
         </label>
-
-        {/* Message Input */}
-        <Input
-          placeholder="Send message..."
-          value={chatMessage}
-          onChange={handleMessageInputChange}
-          onKeyDown={handleKeyDown}
-          className="flex-1"
+        <input
+          ref={fileInputRef}
+          id="chat-file-input"
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFileInputChange}
         />
 
-        {/* Send */}
-        <Button size="icon" className="btn-primary" onClick={handleSend}>
-          {uploading ? <Loader className="animate-spin" /> : <Send size={16} />}
+        <Input
+          placeholder="Send a message"
+          value={chatMessage}
+          onChange={(e) => setChatMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="flex-1 h-10 rounded-full bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-blue-500/40"
+        />
+
+        <Button
+          size="icon"
+          onClick={handleSend}
+          disabled={uploading || (!chatMessage.trim() && files.length === 0)}
+          className="h-10 w-10 shrink-0 rounded-full bg-blue-500 hover:bg-blue-500/90 text-white disabled:opacity-40"
+          aria-label="Send"
+        >
+          {uploading ? (
+            <Loader className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
         </Button>
       </div>
     </div>

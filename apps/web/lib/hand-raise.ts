@@ -19,5 +19,11 @@ export const handleSendHandRaise = (
   };
 
   const ws = getWSConnection();
+
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    console.warn("Socket not connected");
+    return;
+  }
+
   ws.send(JSON.stringify(message));
 };

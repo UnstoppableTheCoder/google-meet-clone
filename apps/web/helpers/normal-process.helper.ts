@@ -61,7 +61,6 @@ export function handleInformOthersAboutNewParticipant({
     localSettings: {
       micOn: true,
       cameraOn: true,
-      handRaised: false,
     },
   };
 
@@ -88,7 +87,6 @@ export function handleInformNewParticipantAboutOthers({
     localSettings: {
       micOn: newParticipant.micOn,
       cameraOn: newParticipant.cameraOn,
-      handRaised: newParticipant.handRaised,
     },
     hasJoinedMeeting: true,
   });
@@ -99,7 +97,6 @@ export function handleInformNewParticipantAboutOthers({
     localSettings: {
       micOn: true,
       cameraOn: true,
-      handRaised: false,
     },
   }));
   setOtherParticipants(participants);

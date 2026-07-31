@@ -1,5 +1,15 @@
 import { FileType } from "@repo/types";
+import { FileText, FileArchive, FileQuestion } from "lucide-react";
 import React from "react";
+
+function Placeholder({ label, icon: Icon }: { label: string; icon: any }) {
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-white/70 text-sm">
+      <Icon className="w-8 h-8" />
+      <span>{label}</span>
+    </div>
+  );
+}
 
 export default function ChatFile({
   fileName,
@@ -11,40 +21,28 @@ export default function ChatFile({
   const url = `${process.env.NEXT_PUBLIC_UPLOADS_BASE_URL}/${fileName}`;
 
   switch (fileType) {
-    case "application/pdf":
-      return (
-        <div className="h-full w-full bg-gray-500 flex justify-center items-center text-white text-bold text-2xl rounded-lg">
-          No PDF Preview Available
-        </div>
-      );
-
     case "image/png":
-      return <img src={url} className="h-full" />;
-
     case "image/jpeg":
-      return <img src={url} className="h-full" />;
-
     case "image/svg+xml":
-      return <img src={url} className="h-full" />;
+      return (
+        <img
+          src={url}
+          alt={fileName}
+          className="h-full w-full object-contain"
+        />
+      );
 
     case "video/mp4":
-      return <video src={url} className="h-full" controls></video>;
-
     case "video/webm":
-      return <video src={url} className="h-full" controls></video>;
+      return <video src={url} controls className="h-full w-full" />;
+
+    case "application/pdf":
+      return <Placeholder label="PDF preview unavailable" icon={FileText} />;
 
     case "application/zip":
-      return (
-        <div className="h-full w-full bg-gray-500 flex justify-center items-center text-white text-bold text-2xl rounded-lg">
-          No ZIP Preview Available
-        </div>
-      );
+      return <Placeholder label="ZIP preview unavailable" icon={FileArchive} />;
 
     default:
-      return (
-        <div className="h-full w-full bg-gray-500 flex justify-center items-center text-white text-bold text-2xl rounded-lg">
-          No Preview Available
-        </div>
-      );
+      return <Placeholder label="No preview" icon={FileQuestion} />;
   }
 }

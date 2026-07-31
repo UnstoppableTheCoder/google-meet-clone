@@ -6,6 +6,7 @@ import { ChatPayload } from "@repo/types";
 export async function saveChatToDB(chatPayload: ChatPayload) {
   try {
     const chats = await chatsCollection();
+    // @ts-ignore
     chats.insertOne(chatPayload);
 
     return {

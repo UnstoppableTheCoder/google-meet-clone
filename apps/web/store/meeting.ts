@@ -168,14 +168,17 @@ export const useMeeting = create<State & Actions>()(
         };
       }),
 
-    setCurrentParticipantHandRaise: (handRaise: boolean) =>
-      set((state) => {
-        const currentParticipant = state.currentParticipant;
-
-        return {
-          currentParticipant: { ...currentParticipant!, handRaise },
-        };
-      }),
+    setCurrentParticipantHandRaise: (handRaised: boolean) =>
+      set((state) =>
+        state.currentParticipant
+          ? {
+              currentParticipant: {
+                ...state.currentParticipant,
+                handRaised,
+              },
+            }
+          : {},
+      ),
 
     setIsEnded: (isEnded: boolean) => set({ isEnded }),
 

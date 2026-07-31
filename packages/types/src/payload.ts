@@ -20,6 +20,7 @@ export interface ChatPayload {
   meetingId: string;
   chatMessage: string;
   files: File[];
+  createdAt?: Date;
 }
 
 export interface LeaveMeetingPayload {

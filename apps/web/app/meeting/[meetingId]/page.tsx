@@ -270,7 +270,7 @@ export default function MeetingPage() {
         <ParticipantsPanel />
       </div>
 
-      <ControlBar />
+      <ControlBar sendReaction={sendReaction} />
     </div>
   );
 }

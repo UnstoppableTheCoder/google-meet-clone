@@ -16,7 +16,6 @@ export interface Participant {
   localSettings?: {
     micOn?: boolean;
     cameraOn?: boolean;
-    handRaised?: boolean;
   };
 }
 
