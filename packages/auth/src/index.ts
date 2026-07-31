@@ -8,6 +8,10 @@ import { sendEmail } from "./services/email.service";
 const db = await getDB();
 
 export const auth = betterAuth({
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://meet.codingthecode.site:3000",
+  ],
   database: mongodbAdapter(db, { client }),
   emailAndPassword: {
     enabled: true,
