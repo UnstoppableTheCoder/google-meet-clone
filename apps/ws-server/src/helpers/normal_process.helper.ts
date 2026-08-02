@@ -3,6 +3,7 @@ import type {
   HandRaisePayload,
   LeaveMeetingPayload,
   MediaOnPayload,
+  EmojiReactionPayload,
   Participant,
 } from "@repo/types";
 import { connections, meetings } from "../store/state";
@@ -213,6 +214,31 @@ export function handleMediaOn(payload: MediaOnPayload) {
         cameraOn: participant.cameraOn,
         micOn: participant.micOn,
       },
+    },
+  });
+
+  meeting.participants.forEach((p) => {
+    if (p.id === participantId) return;
+
+    connections[p.id]?.send(message);
+  });
+}
+
+export function handleEmojiReaction(payload: EmojiReactionPayload) {
+  const { participantId, meetingId } = payload;
+
+  const meeting = meetings[meetingId];
+  if (!meeting) return;
+
+  const participant = meeting.participants.find((p) => p.id === participantId);
+  if (!participant) return;
+
+  // Broadcast the updated state
+  const message = JSON.stringify({
+    label: labels.NORMAL_PROCESS,
+    data: {
+      type: types.EMOJI_REACTION,
+      payload,
     },
   });
 

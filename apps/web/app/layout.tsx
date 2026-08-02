@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", geist.variable, "dark")}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <TooltipProvider>{children}</TooltipProvider>
-        <Toaster />
+        <Toaster position="top-right" richColors closeButton expand />
       </body>
     </html>
   );

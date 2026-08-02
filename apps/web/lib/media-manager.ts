@@ -84,6 +84,5 @@ export function stopLocalStream() {
   const { localStream, setLocalStream } = useMeetingMedia.getState();
 
   localStream?.getTracks().forEach((track) => track.stop());
-
   setLocalStream(null);
 }

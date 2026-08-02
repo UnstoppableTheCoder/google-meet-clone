@@ -3,6 +3,7 @@ import {
   HandRaisePayload,
   Participant,
   MediaOnPayload,
+  EmojiReactionPayload,
 } from "@repo/types";
 import { useMeeting } from "../store/meeting";
 import { getWSConnection } from "@/lib/socket-manager";
@@ -14,6 +15,8 @@ import {
   saveEndMeetingHistory,
 } from "@/actions/meeting.action";
 import { useMeetingMedia } from "@/store/meeting-media";
+
+const reactionTimers = new Map();
 
 export function handleConnectHost({ host }: { host: Participant }) {
   console.log("Event: connectHost");
@@ -165,6 +168,23 @@ export function handleMediaOn(payload: MediaOnPayload) {
     useMeeting.getState().setOtherParticipantRemoteMediaOn;
 
   setOtherParticipantRemoteMediaOn(payload);
+}
+
+export function handleEmojiReaction(payload: EmojiReactionPayload) {
+  console.log("Event: Emoji Reaction");
+  const { setReaction, removeReaction } = useMeetingMedia.getState();
+
+  const id = `r-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const left = 30 + Math.random() * 40;
+
+  setReaction(id, payload.reaction, left);
+
+  const timer = setTimeout(() => {
+    removeReaction(id);
+    reactionTimers.delete(id);
+  }, 2700);
+
+  reactionTimers.set(id, timer);
 }
 
 export async function handleEndMeeting(payload: null) {

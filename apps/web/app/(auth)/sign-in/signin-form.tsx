@@ -14,6 +14,9 @@ import Link from "next/link";
 
 type SignInSchema = z.infer<typeof signInSchema>;
 
+const inputCls =
+  "h-10 rounded-full border border-white/10 bg-white/5 px-4 text-sm text-white placeholder:text-white/40 outline-none transition-colors focus:border-white/20 focus-visible:ring-2 focus-visible:ring-blue-500/40";
+
 export default function SigninForm() {
   const router = useRouter();
 
@@ -47,22 +50,22 @@ export default function SigninForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">
+          <Label htmlFor="email" className="text-xs font-medium text-white/70">
             Email address
           </Label>
-
           <Input
             id="email"
             type="email"
             placeholder="name@example.com"
+            aria-label="Email address"
+            data-testid="signin-email-input"
             {...register("email")}
-            className="h-11 rounded-xl"
+            className={inputCls}
           />
-
           {errors.email && (
-            <p className="text-sm font-medium text-destructive">
+            <p className="text-xs font-medium text-red-400">
               {errors.email.message}
             </p>
           )}
@@ -70,13 +73,17 @@ export default function SigninForm() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium">
+            <Label
+              htmlFor="password"
+              className="text-xs font-medium text-white/70"
+            >
               Password
             </Label>
-
             <Link
               href="/forgot-password"
-              className="text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline underline-offset-4"
+              aria-label="Forgot password"
+              data-testid="signin-forgot-password-link"
+              className="text-xs font-medium text-blue-400 transition-colors hover:text-blue-300"
             >
               Forgot password?
             </Link>
@@ -86,12 +93,13 @@ export default function SigninForm() {
             id="password"
             type="password"
             placeholder="••••••••"
+            aria-label="Password"
+            data-testid="signin-password-input"
             {...register("password")}
-            className="h-11 rounded-xl"
+            className={inputCls}
           />
-
           {errors.password && (
-            <p className="text-sm font-medium text-destructive">
+            <p className="text-xs font-medium text-red-400">
               {errors.password.message}
             </p>
           )}
@@ -100,7 +108,9 @@ export default function SigninForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-xl text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed"
+          aria-label="Sign in"
+          data-testid="signin-submit-button"
+          className="h-10 w-full rounded-full bg-blue-500 text-sm font-medium text-white shadow-none transition-colors hover:bg-blue-500/90 focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:opacity-40"
         >
           {isSubmitting ? "Signing in..." : "Sign In"}
         </Button>

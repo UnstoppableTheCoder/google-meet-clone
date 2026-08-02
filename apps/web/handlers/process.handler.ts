@@ -3,6 +3,7 @@ import { handleSDP_Process } from "@/helpers/webrtc-process.helper";
 import {
   handelDenyJoiningMeeting,
   handleConnectHost,
+  handleEmojiReaction,
   handleEndMeeting,
   handleHandRaise,
   handleInformNewParticipantAboutOthers,
@@ -54,6 +55,10 @@ export function handleNormalProcess(data: any) {
 
     case types.MEDIA_ON:
       handleMediaOn(data.payload);
+      break;
+
+    case types.EMOJI_REACTION:
+      handleEmojiReaction(data.payload);
       break;
 
     case types.END_MEETING:

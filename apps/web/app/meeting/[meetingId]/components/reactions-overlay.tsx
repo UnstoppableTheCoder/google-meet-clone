@@ -2,7 +2,7 @@ export default function ReactionsOverlay({ reactions }: any) {
   return (
     <div
       data-testid="reactions-overlay"
-      className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
+      className="pointer-events-none absolute inset-0 z-40 overflow-hidden"
     >
       {reactions.map((r: any) => (
         <span

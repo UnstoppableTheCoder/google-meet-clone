@@ -13,6 +13,12 @@ export interface MediaOnPayload {
   meetingId: string;
 }
 
+export interface EmojiReactionPayload {
+  reaction: string;
+  participantId: string;
+  meetingId: string;
+}
+
 export interface ChatPayload {
   _id: string;
   senderId: string;

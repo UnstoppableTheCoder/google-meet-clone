@@ -6,6 +6,7 @@ export const useMeetingMedia = create<State & Actions>()(
   devtools((set) => ({
     localStream: null,
     screenStream: null,
+    reactions: [],
 
     screenShare: false,
     isRecording: false,
@@ -20,8 +21,11 @@ export const useMeetingMedia = create<State & Actions>()(
     setScreenShare: (newState) =>
       set({ screenShare: newState }, false, "/meeting-media/screenShare"),
 
-    setIsRecording: (newState) =>
-      set({ isRecording: newState }, false, "/meeting-media/isRecording"),
+    setRecording: (on) =>
+      set({
+        isRecording: on,
+        recordingStartedAt: on ? Date.now() : null,
+      }),
 
     setRemoteStreamVersion: () =>
       set(
@@ -31,6 +35,16 @@ export const useMeetingMedia = create<State & Actions>()(
         false,
         "/meeting-media/remoteStreamVersion",
       ),
+
+    setReaction: (id, emoji, left) =>
+      set((state) => ({
+        reactions: [...state.reactions, { id, emoji, left }],
+      })),
+
+    removeReaction: (id) =>
+      set((state) => ({
+        reactions: state.reactions.filter((r) => r.id !== id),
+      })),
 
     resetMeetingMedia: () =>
       set(

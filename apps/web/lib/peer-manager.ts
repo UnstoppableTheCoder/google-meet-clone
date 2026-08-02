@@ -311,10 +311,10 @@ async function startRecording(isRecording: boolean) {
   };
 
   // Change the state
-  useMeetingMedia.getState().setIsRecording(isRecording);
+  useMeetingMedia.getState().setRecording(isRecording);
 }
 
 function stopRecording(isRecording: boolean) {
   mediaRecorder.stop();
-  useMeetingMedia.getState().setIsRecording(isRecording);
+  useMeetingMedia.getState().setRecording(isRecording);
 }

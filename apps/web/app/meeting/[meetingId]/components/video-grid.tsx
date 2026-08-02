@@ -3,12 +3,10 @@ import { MonitorUp } from "lucide-react";
 import ParticipantTile from "./participant-tile";
 import { useMeeting } from "@/store/meeting";
 import { useMeetingMedia } from "@/store/meeting-media";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { createLocalStream } from "@/lib/media-manager";
 import { Participant } from "@repo/types";
 import { getRemoteStream } from "@/lib/peer-manager";
-import { p } from "framer-motion/client";
-import { validateHeaderName } from "http";
 
 function gridColsForCount(count: number) {
   if (count <= 1) return "grid-cols-1";
@@ -59,6 +57,8 @@ export default function VideoGrid({
     const elements = videoRefs.current[currentParticipant.id];
     if (!elements) return;
 
+    console.log("Local Streams: ", localStream);
+
     elements.forEach((video: HTMLVideoElement) => {
       video.muted = true;
       video.srcObject = localStream;
@@ -73,7 +73,6 @@ export default function VideoGrid({
     if (!elements) return;
 
     const stream = screenShare && screenStream ? screenStream : localStream;
-
     if (!stream) return;
 
     elements.forEach((video: HTMLVideoElement) => {
@@ -87,8 +86,10 @@ export default function VideoGrid({
       const elements = videoRefs.current[participant.id];
       const remoteStream = getRemoteStream(participant.id);
 
+      console.log("Remote Streams: ", remoteStream);
       if (!remoteStream || !elements) return;
       elements.forEach((e: HTMLVideoElement) => {
+        e.muted = false;
         e.srcObject = remoteStream;
       });
     });
@@ -141,8 +142,6 @@ export default function VideoGrid({
                 <ParticipantTile
                   participant={p}
                   size="md"
-                  // pinned={false}
-                  // showControlsOnHover={true}
                   registerVideoRef={registerVideoRef}
                   unregisterVideoRef={unregisterVideoRef}
                 />

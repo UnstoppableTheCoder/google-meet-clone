@@ -1,6 +1,7 @@
-import { useMeeting } from "@/store/meeting";
-import { Card, CardContent } from "@repo/ui/components/card";
+"use client";
+
 import React, { useEffect, useState } from "react";
+import { Video, Users, Timer } from "lucide-react";
 import { getMeetingsStatus } from "../actions/meeting-status.action";
 import { useSession } from "@/lib/auth-client";
 
@@ -22,7 +23,6 @@ export default function MeetingStatus() {
 
   useEffect(() => {
     if (!user) return;
-
     (async () => {
       const res = await getMeetingsStatus(user.id);
       setMeetingsInfo(res.meetingsInfo);
@@ -33,61 +33,57 @@ export default function MeetingStatus() {
     const h = Math.floor(timeInSeconds / 3600);
     const m = Math.floor((timeInSeconds % 3600) / 60);
     const s = Math.floor(timeInSeconds % 60);
-
-    const time = h
-      ? `${h}h ${m}m ${s}s`
-      : m
-        ? `${m}m ${s}s`
-        : s
-          ? `${s}s`
-          : "0";
-
-    return time;
+    if (h) return `${h}h ${m}m`;
+    if (m) return `${m}m ${s}s`;
+    if (s) return `${s}s`;
+    return "0s";
   }
 
+  const stats = [
+    {
+      label: "Meetings Hosted",
+      value: String(meetingsInfo.hostedMeetings ?? 0),
+      Icon: Video,
+      testId: "stat-hosted",
+    },
+    {
+      label: "Meetings Joined",
+      value: String(meetingsInfo.joinedMeetings ?? 0),
+      Icon: Users,
+      testId: "stat-joined",
+    },
+    {
+      label: "Meeting Time",
+      value: getDuration(meetingsInfo.totalSpentTimeInSec ?? 0),
+      Icon: Timer,
+      testId: "stat-time",
+    },
+  ];
+
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <Card className="rounded-2xl border border-border bg-card shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
-        <CardContent className="flex flex-col items-center p-6 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-xl">
-            🎥
+    <div className="grid gap-3 md:grid-cols-3" data-testid="meeting-status">
+      {stats.map(({ label, value, Icon, testId }) => (
+        <div
+          key={label}
+          data-testid={testId}
+          className="flex items-center justify-between rounded-2xl border border-white/5 bg-[#111317]/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl transition-colors hover:bg-white/[0.06]"
+        >
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-white/50">
+              {label}
+            </p>
+            <p className="mt-1 font-mono text-3xl font-semibold tabular-nums text-white">
+              {value}
+            </p>
           </div>
-
-          <p className="text-3xl font-semibold tracking-tight">
-            {meetingsInfo?.hostedMeetings}
-          </p>
-
-          <p className="mt-1 text-sm text-muted-foreground">Meetings Hosted</p>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-2xl border border-border bg-card shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
-        <CardContent className="flex flex-col items-center p-6 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-xl">
-            👥
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 ring-1 ring-white/10"
+            aria-hidden
+          >
+            <Icon className="h-5 w-5 text-blue-200" />
           </div>
-
-          <p className="text-3xl font-semibold tracking-tight">
-            {meetingsInfo?.joinedMeetings}
-          </p>
-
-          <p className="mt-1 text-sm text-muted-foreground">Meetings Joined</p>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-2xl border border-border bg-card shadow-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
-        <CardContent className="flex flex-col items-center p-6 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-xl">
-            ⏱️
-          </div>
-
-          <p className="text-3xl font-semibold tracking-tight">
-            {getDuration(meetingsInfo.totalSpentTimeInSec)}
-          </p>
-
-          <p className="mt-1 text-sm text-muted-foreground">Meeting Time</p>
-        </CardContent>
-      </Card>
+        </div>
+      ))}
     </div>
   );
 }

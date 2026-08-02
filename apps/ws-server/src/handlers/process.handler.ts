@@ -1,6 +1,7 @@
 import { types } from "@repo/constants";
 import {
   handleAskToConnect,
+  handleEmojiReaction,
   handleEndMeeting,
   handleGrantJoiningPermission,
   handleHandRaise,
@@ -30,6 +31,10 @@ export function handleNormalProcess(data: any) {
 
     case types.MEDIA_ON:
       handleMediaOn(data.payload);
+      break;
+
+    case types.EMOJI_REACTION:
+      handleEmojiReaction(data.payload);
       break;
 
     case types.LEAVE_MEETING:
