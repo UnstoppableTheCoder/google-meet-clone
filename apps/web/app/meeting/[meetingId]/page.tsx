@@ -12,13 +12,13 @@ import { signaling } from "@/lib/signaling";
 import useMeetingContext from "./context/use-meeting-context";
 import { saveMeetingHistory } from "./action";
 
-import MeetingHeader from "./components/meeting-header";
-import VideoGrid from "./components/video-grid";
-import ReactionsOverlay from "./components/reactions-overlay";
-import Filmstrip from "./components/filmstrip";
-import ChatPanel from "./components/chat-panel";
-import ParticipantsPanel from "./components/participant-panel";
-import ControlBar from "./components/control-bar";
+import MeetingHeader from "./components/video/meeting-header";
+import VideoGrid from "./components/video/video-grid";
+import ReactionsOverlay from "./components/video/reactions-overlay";
+import Filmstrip from "./components/video/filmstrip";
+import ChatPanel from "./components/panels/chats/chat-panel";
+import ParticipantsPanel from "./components/panels/participants/participant-panel";
+import ControlBar from "./components/video/control-bar";
 
 import type { Participant } from "@repo/types";
 import { useMeetingMedia } from "@/store/meeting-media";

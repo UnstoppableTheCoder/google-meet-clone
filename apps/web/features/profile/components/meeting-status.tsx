@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Video, Users, Timer } from "lucide-react";
-import { getMeetingsStatus } from "../actions/meeting-status.action";
 import { useSession } from "@/lib/auth-client";
+import { getMeetingsStatus } from "../actions/meeting-status";
 
 interface MeetingsInfo {
   hostedMeetings: number;

@@ -8,7 +8,7 @@ import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import SocialAuth from "../components/social-auth";
+import SocialAuth from "../../shared/components/social-auth";
 
 type SignupSchema = z.infer<typeof signupSchema>;
 

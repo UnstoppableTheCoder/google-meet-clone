@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Video, Inbox } from "lucide-react";
-import { getRecentMeetings } from "../action";
 import { useSession } from "@/lib/auth-client";
+import { getRecentMeetings } from "../actions/recent-meetings";
 
 interface RecentMeeting {
   _id: string;

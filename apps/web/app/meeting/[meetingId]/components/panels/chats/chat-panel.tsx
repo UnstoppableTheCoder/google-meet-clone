@@ -1,34 +1,30 @@
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { X, MessagesSquare } from "lucide-react";
+import { Button } from "@repo/ui/components/button";
 import { useMeeting } from "@/store/meeting";
-import React, { useEffect, useRef } from "react";
-import ChatMessage from "./message/chat-message";
 import { useChat } from "@/store/chat";
-import { cn } from "@repo/ui/lib/utils";
-import ChatInput from "./input/chat-input";
 import { getChats } from "./message/action";
+import ChatMessage from "./message/chat-message";
+import ChatInput from "./input/chat-input";
+import { cn } from "@repo/ui/lib/utils";
 
 export default function ChatPanel() {
-  const activePanel = useMeeting((state) => state.activePanel);
-  const setChats = useChat((state) => state.setChats);
-  const chats = useChat((state) => state.chats);
+  const activePanel = useMeeting((s) => s.activePanel);
+  const currentParticipant = useMeeting((s) => s.currentParticipant);
+  const setActivePanel = useMeeting((s) => s.setActivePanel);
+  const setChats = useChat((s) => s.setChats);
+  const chats = useChat((s) => s.chats);
   const chatMessageRef = useRef<HTMLDivElement>(null);
-  const currentParticipant = useMeeting((state) => state.currentParticipant);
 
   useEffect(() => {
-    if (!currentParticipant) return;
-    const meetingId = currentParticipant.meetingId;
-    if (meetingId) {
-      getChats(meetingId, currentParticipant.id)
-        .then((res) => {
-          if (res.success) {
-            setChats(res.chats);
-            console.log(res.message);
-          } else {
-            console.log(res.message);
-          }
-        })
-        .catch((e) => console.log("Error: ", e));
-    }
-  }, [currentParticipant]);
+    if (!currentParticipant?.meetingId) return;
+    getChats(currentParticipant.meetingId, currentParticipant.id)
+      .then((res) => {
+        if (res.success) setChats(res.chats);
+      })
+      .catch((e) => console.log("Error: ", e));
+  }, [currentParticipant, setChats]);
 
   useEffect(() => {
     if (chatMessageRef.current) {
@@ -36,37 +32,79 @@ export default function ChatPanel() {
     }
   }, [chats]);
 
+  if (!currentParticipant) return null;
+
   return (
-    <div
+    <motion.aside
+      initial={{ x: 40, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 40, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 32 }}
+      data-testid="chat-panel"
       className={cn(
-        "w-105 border-l border-base-300 bg-base-100 flex flex-col h-screen overflow-y-hidden",
+        `fixed right-0 bottom-0 top-[72px] z-30 shrink-0
+                 border-l border-white/5 bg-[#111317]/95 backdrop-blur-xl
+                 flex flex-col shadow-2xl shadow-black/40`,
         activePanel !== "chats" && "hidden",
+        "w-full xs:w-[400px] sm:w-[430px] max-w-[100vw]",
       )}
     >
-      <div className="p-4 border-b border-base-300 h-[6%]">
-        <h3 className="font-semibold text-base-content">Meeting Chat</h3>
-      </div>
-
-      <div className="flex flex-col justify-center relative h-[94%]">
-        <div
-          className="overflow-x-auto h-[90%] no-scrollbar"
-          ref={chatMessageRef}
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0">
+        <div className="min-w-0">
+          <h2 className="font-semibold text-base leading-tight text-white">
+            In-call messages
+          </h2>
+          <p className="text-xs text-white/50 mt-0.5">
+            Visible to everyone · cleared when the meeting ends
+          </p>
+        </div>
+        <Button
+          data-testid="chat-close-btn"
+          variant="ghost"
+          size="icon"
+          onClick={() => setActivePanel("none")}
+          className="rounded-full h-8 w-8 hover:bg-white/5 text-white/70"
+          aria-label="Close chat"
         >
-          {chats.length === 0 && (
-            <div className="text-5xl font-bold h-full text-gray-400 flex items-center justify-center">
-              Chats
-            </div>
-          )}
-
-          {chats.map((chat, index) => (
-            <ChatMessage key={index} chat={chat} />
-          ))}
-        </div>
-
-        <div className="h-[10%] flex items-center">
-          <ChatInput />
-        </div>
+          <X className="w-4 h-4" />
+        </Button>
       </div>
-    </div>
+
+      {/* Messages */}
+      <div
+        ref={chatMessageRef}
+        data-testid="chat-messages"
+        className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-3 py-4"
+      >
+        {chats.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center gap-3 px-6">
+            <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
+              <MessagesSquare className="w-5 h-5 text-white/50" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-white/90">
+                No messages yet
+              </div>
+              <p className="text-xs text-white/50 mt-1 leading-relaxed">
+                Say hi — messages are visible to everyone in the call and
+                cleared when the meeting ends.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {chats.map((chat, index) => (
+              <ChatMessage key={chat._id ?? index} chat={chat} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="shrink-0 border-t border-white/5 bg-black/20">
+        <ChatInput />
+      </div>
+    </motion.aside>
   );
 }

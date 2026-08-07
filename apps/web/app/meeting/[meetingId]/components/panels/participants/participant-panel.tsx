@@ -6,8 +6,8 @@ import { ScrollArea } from "@repo/ui/components/scroll-area";
 import { motion } from "framer-motion";
 import { X, Search } from "lucide-react";
 import { useState } from "react";
-import ParticipantsList from "./panels/participants/participants-list";
-import PermissionModal from "./panels/participants/permission-modal";
+import ParticipantsList from "./participants-list";
+import PermissionModal from "./permission-modal";
 
 export default function ParticipantsPanel() {
   const [query, setQuery] = useState("");

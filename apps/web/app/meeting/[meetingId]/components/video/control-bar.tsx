@@ -24,7 +24,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/ui/components/popover";
-import { REACTIONS } from "../data/mockData";
 import { Button } from "@repo/ui/components/button";
 import { useMeeting } from "@/store/meeting";
 import { useMeetingMedia } from "@/store/meeting-media";
@@ -32,9 +31,11 @@ import { toggleCamera, toggleMic } from "@/lib/media-manager";
 import { handleIsRecording, handleScreenShare } from "@/lib/peer-manager";
 import Image from "next/image";
 import { handleSendMediaOn } from "@/lib/media-on";
-import EndMeetingModal from "./video/end-meeting-modal";
+import EndMeetingModal from "./end-meeting-modal";
 import { handleSendHandRaise } from "@/lib/hand-raise";
 import { handleSendEmoji } from "@/lib/emoji-reaction";
+
+const REACTIONS = ["❤️", "👍", "👏", "🎉", "😂", "🙌", "🔥", "✨"];
 
 function CtrlBtn({ active, danger, onClick, label, children, testid }: any) {
   return (

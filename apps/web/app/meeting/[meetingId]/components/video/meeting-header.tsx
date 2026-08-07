@@ -28,8 +28,8 @@ import {
 import { Button } from "@repo/ui/components/button";
 import { useMeeting } from "@/store/meeting";
 import { useMeetingMedia } from "@/store/meeting-media";
-import useMeetingContext from "../context/use-meeting-context";
-import { getMeetingInfo } from "./video/actions";
+import useMeetingContext from "../../context/use-meeting-context";
+import { getMeetingInfo } from "./actions";
 import { cn } from "@repo/ui/lib/utils";
 
 /* -------- Time helpers -------- */

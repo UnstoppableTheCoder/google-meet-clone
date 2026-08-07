@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Video } from "lucide-react";
-import AvatarDropDown from "./components/avatar-dropdown";
+import AvatarDropDown from "../avatar-dropdown";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
